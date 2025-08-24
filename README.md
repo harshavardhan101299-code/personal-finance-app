@@ -1,46 +1,168 @@
-# Getting Started with Create React App
+# Personal Finance Web App
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A modern, responsive personal finance web application built with React, TypeScript, and Material-UI. This app helps you track expenses, manage budgets, and visualize your financial data with beautiful charts and analytics.
 
-## Available Scripts
+## Features
 
-In the project directory, you can run:
+### 📊 Dashboard
+- **Overview Cards**: Total expenses, budget, and transaction count
+- **Interactive Charts**: Bar chart showing expenses by category and pie chart for expense distribution
+- **Budget Status Table**: Real-time progress tracking for each budget category
+- **Visual Progress Bars**: Color-coded progress indicators (green for under budget, red for over budget)
 
-### `npm start`
+### 💰 Expense Tracker
+- **Add/Edit Expenses**: Simple form to add new expenses or edit existing ones
+- **Categorized Expenses**: Organize expenses by predefined categories
+- **Transaction Table**: View all expenses in a clean, sortable table format
+- **Real-time Updates**: See totals update immediately when adding/editing expenses
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+### 🎯 Budget Manager
+- **Category Management**: View and edit expense categories and their descriptions
+- **Budget Setting**: Set monthly budgets for each category
+- **Progress Tracking**: Visual progress bars showing budget utilization
+- **Summary Cards**: Quick overview of total budget, spent amount, and remaining budget
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## Data Structure
 
-### `npm test`
+The app is based on your existing Google Sheets structure with the following categories:
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- **Housing**: Home Essentials (no budget set)
+- **Subscriptions**: Phone, LinkedIn, iCloud, Netflix, Spotify (₹1,500 budget)
+- **Groceries**: Ratnadeep, Ushodaya, Kirana Stores, Market (₹3,000 budget)
+- **Dining**: Restaurants, Clubs, Zomato, Zepto, Swiggy (₹4,000 budget)
+- **Learning & Growth**: Courses, Certifications, Fellowships, Books (₹500 budget)
+- **Personal Care**: Body Essentials, Gym, Medicines, Hair Cut, Clothes (₹1,500 budget)
+- **Travel**: Uber, Rapido, Ola, Fuel (₹4,000 budget)
+- **Entertainment**: Movies, Cricket, Badminton, Clubs, Stand Up (₹2,000 budget)
+- **Productivity**: Apps, Chat GPT, Software, Notion, Calendars (₹2,000 budget)
+- **Work**: Desk Setup (₹3,000 budget)
+- **Miscellaneous**: One-time expenses (no budget set)
 
-### `npm run build`
+## Getting Started
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Prerequisites
+- Node.js (version 14 or higher)
+- npm or yarn
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Installation
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+1. **Clone or navigate to the project directory**:
+   ```bash
+   cd personal-finance-app
+   ```
 
-### `npm run eject`
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+3. **Start the development server**:
+   ```bash
+   npm start
+   ```
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+4. **Open your browser** and navigate to `http://localhost:3000`
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+### Available Scripts
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+- `npm start` - Runs the app in development mode
+- `npm test` - Launches the test runner
+- `npm run build` - Builds the app for production
+- `npm run eject` - Ejects from Create React App (not recommended)
 
-## Learn More
+## Usage
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### Dashboard
+- View your overall financial summary at a glance
+- Analyze spending patterns with interactive charts
+- Monitor budget progress across all categories
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### Adding Expenses
+1. Navigate to the "Expense Tracker" tab
+2. Click "Add Expense" button
+3. Fill in the details:
+   - **Date**: Select the expense date
+   - **Category**: Choose from predefined categories
+   - **Description**: Enter a detailed description
+   - **Paid By**: Select who paid (Me, Eshwar, Other)
+   - **Amount**: Enter the amount in Indian Rupees
+4. Click "Add" to save the expense
+
+### Managing Budgets
+1. Go to the "Budget Manager" tab
+2. Click the edit icon next to any category
+3. Modify the category name, description, or budget amount
+4. Click the save icon to update
+
+## Technology Stack
+
+- **React 18** - Modern React with hooks
+- **TypeScript** - Type-safe JavaScript
+- **Material-UI (MUI)** - Beautiful, responsive UI components
+- **Recharts** - Interactive charts and data visualization
+- **date-fns** - Modern date utility library
+
+## Data Persistence
+
+Currently, the app uses sample data stored in memory. For production use, you would want to:
+
+1. **Add a backend API** (Node.js/Express, Python/Django, etc.)
+2. **Implement a database** (PostgreSQL, MongoDB, etc.)
+3. **Add user authentication** for multi-user support
+4. **Implement data export** to CSV/Excel formats
+
+## Customization
+
+### Adding New Categories
+Edit `src/data/sampleData.ts` to add new expense categories:
+
+```typescript
+{
+  id: 'new-category',
+  name: 'New Category',
+  description: 'Description of the category',
+  budget: 1000 // Set to null for no budget
+}
+```
+
+### Modifying the Theme
+Update the theme in `src/App.tsx` to change colors and styling:
+
+```typescript
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#your-color-here',
+    },
+    // ... other theme options
+  },
+});
+```
+
+## Future Enhancements
+
+- [ ] **Data Import/Export**: Import from Google Sheets, export to Excel
+- [ ] **Multiple Months**: Track expenses across different months
+- [ ] **Investment Tracking**: Add investment portfolio management
+- [ ] **Goal Setting**: Set financial goals and track progress
+- [ ] **Notifications**: Budget alerts and reminders
+- [ ] **Mobile App**: React Native version for mobile devices
+- [ ] **Data Backup**: Cloud storage integration
+- [ ] **Multi-currency**: Support for different currencies
+- [ ] **Receipt Upload**: Photo upload and OCR for receipts
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## License
+
+This project is open source and available under the MIT License.
+
+---
+
+**Note**: This app is designed specifically for tracking personal finances in Indian Rupees (₹) and is based on your existing Google Sheets structure. The sample data includes your April 2024 expenses for demonstration purposes.
