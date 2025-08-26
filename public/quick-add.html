@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Add Expense - Harsha's Finance</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a237e 0%, #534bae 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(26, 35, 126, 0.2);
+            padding: 32px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .header h1 {
+            color: #1a237e;
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #546e7a;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #1a237e;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+            background: white;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #1a237e;
+        }
+
+        .amount-input {
+            position: relative;
+        }
+
+        .amount-input input {
+            padding-left: 32px;
+        }
+
+        .rupee-symbol {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #1a237e;
+            font-weight: 600;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 32px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-cancel {
+            background: #f5f5f5;
+            color: #546e7a;
+        }
+
+        .btn-cancel:hover {
+            background: #e0e0e0;
+        }
+
+        .btn-add {
+            background: #1a237e;
+            color: white;
+        }
+
+        .btn-add:hover {
+            background: #000051;
+        }
+
+        .success-message {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 16px;
+            text-align: center;
+            display: none;
+        }
+
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 16px;
+            text-align: center;
+            display: none;
+        }
+
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 24px;
+                margin: 16px;
+            }
+            
+            .header h1 {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Quick Add Expense</h1>
+            <p>Harsha's Personal Finance</p>
+        </div>
+
+        <form id="expenseForm">
+            <div class="form-group">
+                <label for="date">Date</label>
+                <input type="date" id="date" name="date" required>
+            </div>
+
+            <div class="form-group">
+                <label for="category">Category</label>
+                <select id="category" name="category" required>
+                    <option value="">Select Category</option>
+                    <option value="Dining">Dining</option>
+                    <option value="Groceries">Groceries</option>
+                    <option value="Personal Care">Personal Care</option>
+                    <option value="Subscriptions">Subscriptions</option>
+                    <option value="Travel">Travel</option>
+                    <option value="Entertainment">Entertainment</option>
+                    <option value="Productivity">Productivity</option>
+                    <option value="Work">Work</option>
+                    <option value="Learning & Growth">Learning & Growth</option>
+                    <option value="Housing">Housing</option>
+                    <option value="Miscellaneous">Miscellaneous</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" name="description" rows="3" placeholder="What was this expense for?" required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="paidBy">Paid By</label>
+                <select id="paidBy" name="paidBy" required>
+                    <option value="Me">Me</option>
+                    <option value="Eshwar">Eshwar</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="amount">Amount (₹)</label>
+                <div class="amount-input">
+                    <span class="rupee-symbol">₹</span>
+                    <input type="number" id="amount" name="amount" step="0.01" min="0" placeholder="0.00" required>
+                </div>
+            </div>
+
+            <div class="buttons">
+                <button type="button" class="btn btn-cancel" onclick="resetForm()">Cancel</button>
+                <button type="submit" class="btn btn-add">Add Expense</button>
+            </div>
+        </form>
+
+        <div id="successMessage" class="success-message">
+            ✅ Expense added successfully! 
+            <br><small>Your expense has been saved and will appear in the main app.</small>
+            <br><a href="/" style="color: #2e7d32; text-decoration: none; font-weight: 600;">← Back to Main App</a>
+        </div>
+
+        <div id="errorMessage" class="error-message">
+            ❌ Error adding expense. Please try again.
+        </div>
+    </div>
+
+    <script>
+        // Set today's date as default
+        document.getElementById('date').value = new Date().toISOString().split('T')[0];
+
+        // Handle form submission
+        document.getElementById('expenseForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const form = e.target;
+            const formData = new FormData(form);
+            
+            // Get form values
+            const expense = {
+                id: Date.now().toString(),
+                date: formData.get('date'),
+                type: formData.get('category'),
+                description: formData.get('description'),
+                paidBy: formData.get('paidBy'),
+                amount: parseFloat(formData.get('amount'))
+            };
+
+            // Add loading state
+            form.classList.add('loading');
+            
+            // Save to localStorage
+            try {
+                const existingExpenses = JSON.parse(localStorage.getItem('expenses') || '[]');
+                existingExpenses.push(expense);
+                localStorage.setItem('expenses', JSON.stringify(existingExpenses));
+                
+                // Show success message
+                document.getElementById('successMessage').style.display = 'block';
+                document.getElementById('errorMessage').style.display = 'none';
+                
+                // Reset form after 2 seconds
+                setTimeout(() => {
+                    resetForm();
+                    document.getElementById('successMessage').style.display = 'none';
+                }, 2000);
+                
+            } catch (error) {
+                // Show error message
+                document.getElementById('errorMessage').style.display = 'block';
+                document.getElementById('successMessage').style.display = 'none';
+            } finally {
+                form.classList.remove('loading');
+            }
+        });
+
+        function resetForm() {
+            document.getElementById('expenseForm').reset();
+            document.getElementById('date').value = new Date().toISOString().split('T')[0];
+        }
+
+        // Auto-focus on description field for better UX
+        document.getElementById('description').focus();
+    </script>
+</body>
+</html>

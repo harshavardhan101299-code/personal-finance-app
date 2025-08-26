@@ -6,7 +6,7 @@ import ExpenseTracker from './components/ExpenseTracker';
 import BudgetManager from './components/BudgetManager';
 import DataUpload from './components/DataUpload';
 import { ExpenseEntry, ExpenseCategory } from './types';
-import { expenseCategories, allExpenses } from './data/sampleData';
+import { expenseCategories } from './data/sampleData';
 
 const theme = createTheme({
   palette: {
@@ -88,20 +88,9 @@ const theme = createTheme({
 
 function App() {
   const [currentTab, setCurrentTab] = useState(0);
-  const [selectedMonth, setSelectedMonth] = useState("2024-08");
-  
-  // Load expenses from localStorage on app start, or use sample data if empty
-  const [expenses, setExpenses] = useState<ExpenseEntry[]>(() => {
-    const saved = localStorage.getItem('expenses');
-    return saved ? JSON.parse(saved) : allExpenses;
-  });
-  
+  const [selectedMonth, setSelectedMonth] = useState("2024-04");
+  const [expenses, setExpenses] = useState<ExpenseEntry[]>(aprilExpenses);
   const [categories, setCategories] = useState<ExpenseCategory[]>(expenseCategories);
-
-  // Save expenses to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem('expenses', JSON.stringify(expenses));
-  }, [expenses]);
 
   const handleDataUpload = (uploadedExpenses: ExpenseEntry[], uploadedCategories: ExpenseCategory[]) => {
     setExpenses(uploadedExpenses);
@@ -142,9 +131,9 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box sx={{ minHeight: '100vh', backgroundColor: '#f8f9fa' }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#f8f9fa' }}>
         <Navigation currentTab={currentTab} onTabChange={setCurrentTab} />
-        <Box sx={{ pt: 2, pb: 4 }}>
+        <Box component="main" sx={{ flexGrow: 1, backgroundColor: '#f8f9fa' }}>
           {renderContent()}
         </Box>
       </Box>

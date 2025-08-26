@@ -19,13 +19,15 @@ import { ExpenseEntry, ExpenseCategory, UploadedData, CSVRow } from '../types';
 
 interface DataUploadProps {
   onDataUpload: (expenses: ExpenseEntry[], categories: ExpenseCategory[]) => void;
+  existingExpenses: ExpenseEntry[];
 }
 
-const DataUpload: React.FC<DataUploadProps> = ({ onDataUpload }) => {
+const DataUpload: React.FC<DataUploadProps> = ({ onDataUpload, existingExpenses }) => {
   const [uploading, setUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState<UploadedData | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [detectedColumns, setDetectedColumns] = useState<string[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
 
   const parseDate = (dateStr: string): string => {
     // Handle "D-Mon" format like "2-Jul"
@@ -41,6 +43,7 @@ const DataUpload: React.FC<DataUploadProps> = ({ onDataUpload }) => {
       const day = dMonMatch[1].padStart(2, '0');
       const month = monthMap[dMonMatch[2]];
       if (month) {
+        // Use 2024 as the year since that's what the dashboard expects
         return `2024-${month}-${day}`;
       }
     }
@@ -59,90 +62,84 @@ const DataUpload: React.FC<DataUploadProps> = ({ onDataUpload }) => {
     const lines = csvText.split('\n');
     console.log('CSV Lines:', lines.length);
     console.log('First line:', lines[0]);
+    console.log('Second line (headers):', lines[1]);
     
     // Try different delimiters
     let delimiter = ',';
-    if (lines[0].includes('\t')) delimiter = '\t';
-    if (lines[0].includes(';')) delimiter = ';';
+    if (lines[1] && lines[1].includes('\t')) delimiter = '\t';
+    if (lines[1] && lines[1].includes(';')) delimiter = ';';
     
     console.log('Using delimiter:', delimiter);
     
-    // Find the actual header row (skip empty lines)
-    let headerRowIndex = 0;
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim();
-      console.log(`Checking line ${i + 1}: "${line}"`);
-      
-      if (line && line.toLowerCase().includes('date') && line.toLowerCase().includes('type') && line.toLowerCase().includes('description') && line.toLowerCase().includes('amount')) {
-        headerRowIndex = i;
-        console.log(`Found header row at line ${i + 1}:`, line);
-        break;
-      }
-    }
-    
-    if (headerRowIndex === 0) {
-      console.log('Could not find header row with Date, Type, Description, Amount');
-      return { rows: [], columns: [] };
-    }
-    
+    // Headers are on row 2 (index 1)
+    const headerRowIndex = 1;
     const headers = lines[headerRowIndex].split(delimiter).map(h => h.trim().replace(/"/g, ''));
     console.log('Headers:', headers);
     
-    // Check if this looks like our expected format
-    const expectedHeaders = ['Date', 'Type', 'Description', 'Amount'];
-    const hasExpectedHeaders = expectedHeaders.every(header => 
-      headers.some(h => h.toLowerCase() === header.toLowerCase())
-    );
+    // Find the column indices for our required fields
+    // Handle potential duplicate column names by finding the first occurrence
+    const dateIndex = headers.findIndex(h => h.toLowerCase() === 'date');
+    const typeIndex = headers.findIndex(h => h.toLowerCase() === 'type');
+    const descriptionIndex = headers.findIndex(h => h.toLowerCase() === 'description');
+    const amountIndex = headers.findIndex(h => h.toLowerCase() === 'amount');
     
-    console.log('Has expected headers:', hasExpectedHeaders);
-    console.log('Expected headers:', expectedHeaders);
-    console.log('Found headers:', headers);
-    
-    // Check each expected header
-    expectedHeaders.forEach(expected => {
-      const found = headers.some(h => h.toLowerCase() === expected.toLowerCase());
-      console.log(`Looking for "${expected}": ${found ? 'FOUND' : 'NOT FOUND'}`);
+    console.log('Column indices:', {
+      date: dateIndex,
+      type: typeIndex,
+      description: descriptionIndex,
+      amount: amountIndex
     });
+    console.log('All headers:', headers);
     
-    if (!hasExpectedHeaders) {
-      console.log('Headers do not match expected format. Found:', headers);
+    // Check if we have all required columns
+    if (dateIndex === -1 || typeIndex === -1 || descriptionIndex === -1 || amountIndex === -1) {
+      console.log('Missing required columns. Found:', { dateIndex, typeIndex, descriptionIndex, amountIndex });
+      console.log('Available headers:', headers);
       return { rows: [], columns: headers };
     }
     
     const rows: CSVRow[] = [];
-    let foundPivotTable = false;
 
-    for (let i = headerRowIndex + 1; i < lines.length; i++) {
+    // Start processing from row 3 (index 2) since headers are on row 2
+    for (let i = 2; i < lines.length; i++) {
       if (lines[i].trim()) {
         const values = lines[i].split(delimiter).map(v => v.trim().replace(/"/g, ''));
         console.log(`Row ${i + 1}:`, values);
         
-        // Skip rows that don't have enough columns for expense data
-        if (values.length < 4) {
+        // Skip rows that don't have enough columns
+        if (values.length <= Math.max(dateIndex, typeIndex, descriptionIndex, amountIndex)) {
           console.log(`Skipping short row ${i + 1}:`, values);
           continue;
         }
         
-        // Skip rows that look like pivot table data (have empty columns or summary data)
-        if (values[4] !== '' || values[5] !== '' || values[6] !== '') {
-          console.log(`Skipping pivot table row ${i + 1}:`, values);
+        // Skip rows where the date value doesn't look like a date
+        const dateValue = values[dateIndex] || '';
+        if (!dateValue.match(/^\d{1,2}-[A-Za-z]{3}$/)) {
+          console.log(`Skipping non-date row ${i + 1}:`, dateValue);
           continue;
         }
         
-        // Skip rows where the first value doesn't look like a date
-        const firstValue = values[0] || '';
-        if (!firstValue.match(/^\d{1,2}-[A-Za-z]{3}$/)) {
-          console.log(`Skipping non-date row ${i + 1}:`, firstValue);
-          continue;
-        }
-        
-        // Create expense entry directly
+        // Create expense entry using only the required columns
         const expense: CSVRow = {
-          Date: values[0] || '',
-          Type: values[1] || '',
-          Description: values[2] || '',
-          Amount: values[3] || ''
+          Date: values[dateIndex] || '',
+          Type: values[typeIndex] || '',
+          Description: values[descriptionIndex] || '',
+          Amount: values[amountIndex] || ''
         };
+        
+        console.log(`Row ${i + 1} extracted values:`, {
+          dateValue: values[dateIndex],
+          typeValue: values[typeIndex],
+          descriptionValue: values[descriptionIndex],
+          amountValue: values[amountIndex]
+        });
+        
+        // Validate that amount is numeric before processing
+        const amountValue = values[amountIndex] || '';
+        if (!amountValue.match(/^\d+$/)) {
+          console.log(`Row ${i + 1} has non-numeric amount: "${amountValue}" - skipping`);
+          continue;
+        }
         
         console.log(`Created expense row ${i + 1}:`, {
           Date: expense.Date,
@@ -194,6 +191,11 @@ const DataUpload: React.FC<DataUploadProps> = ({ onDataUpload }) => {
         const cleanAmount = amountStr.replace(/[^\d.-]/g, '');
         const amount = parseFloat(cleanAmount);
         if (isNaN(amount)) {
+          console.log(`Row ${index + 2} amount parsing failed:`, {
+            original: amountStr,
+            cleaned: cleanAmount,
+            parsed: amount
+          });
           message += `Row ${index + 2}: Invalid amount format "${amountStr}"\n`;
           success = false;
           return;
@@ -202,6 +204,8 @@ const DataUpload: React.FC<DataUploadProps> = ({ onDataUpload }) => {
         // Parse date
         const dateStr = hasDate.toString();
         const parsedDate = parseDate(dateStr);
+        console.log(`Date parsing: "${dateStr}" -> "${parsedDate}"`);
+        
         if (!parsedDate || parsedDate === dateStr) {
           message += `Row ${index + 2}: Invalid date format "${dateStr}"\n`;
           success = false;
@@ -213,14 +217,17 @@ const DataUpload: React.FC<DataUploadProps> = ({ onDataUpload }) => {
         categorySet.add(typeStr);
 
         // Create expense entry
-        expenses.push({
+        const expenseEntry = {
           id: `uploaded-${index}`,
           date: parsedDate,
           type: typeStr,
           description: hasDescription.toString(),
-          paidBy: row['Paid By'] || row['Paid by'] || row['paid by'] || 'Me', // Default to 'Me' if not provided
+          paidBy: 'Me', // Default value for uploaded data
           amount: amount
-        });
+        };
+        
+        console.log(`Created expense entry:`, expenseEntry);
+        expenses.push(expenseEntry);
       });
 
       // Create categories from the data
@@ -280,10 +287,23 @@ const DataUpload: React.FC<DataUploadProps> = ({ onDataUpload }) => {
       const result = processCSVData(rows);
       console.log('Processing result:', result);
       
-      setUploadResult(result);
-      
       if (result.success) {
-        onDataUpload(result.expenses, result.categories);
+        // Merge with existing expenses
+        const mergedExpenses = [...existingExpenses, ...result.expenses];
+        console.log('Merged expenses:', mergedExpenses.length, 'total');
+        
+        // Update the uploaded files list
+        setUploadedFiles(prev => [...prev, file]);
+        
+        // Call the upload handler with merged data
+        onDataUpload(mergedExpenses, result.categories);
+        
+        setUploadResult({
+          ...result,
+          message: `Successfully uploaded ${result.expenses.length} expenses. Total expenses now: ${mergedExpenses.length}`
+        });
+      } else {
+        setUploadResult(result);
       }
     } catch (error) {
       console.error('Upload error:', error);
@@ -417,39 +437,59 @@ const DataUpload: React.FC<DataUploadProps> = ({ onDataUpload }) => {
             </CardContent>
           </Card>
         )}
+        {uploadedFiles.length > 0 && (
+          <Card sx={{ mb: 3 }}>
+            <CardContent>
+              <Typography variant="h6" gutterBottom sx={{ color: '#1a237e' }}>
+                Uploaded Files ({uploadedFiles.length})
+              </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                {uploadedFiles.map((file, index) => (
+                  <Typography key={index} variant="body2" color="text.secondary">
+                    {index + 1}. {file.name}
+                  </Typography>
+                ))}
+              </Box>
+            </CardContent>
+          </Card>
+        )}
       </Paper>
 
       <Paper sx={{ p: 4 }}>
         <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, mb: 3, color: '#1a237e' }}>
-          Instructions
+          Upload Multiple Months
+        </Typography>
+        
+        <Typography variant="body1" sx={{ mb: 3, color: '#666' }}>
+          To upload all your historical data (April-August 2024):
         </Typography>
         
         <List>
           <ListItem>
             <ListItemText 
-              primary="1. Export from Google Sheets"
-              secondary="In your Google Sheets, go to File → Download → CSV (.csv)"
+              primary="1. Export each month separately"
+              secondary="From Google Sheets, export April, May, June, July, and August as separate CSV files"
             />
           </ListItem>
           <Divider />
           <ListItem>
             <ListItemText 
-              primary="2. Prepare Your Data"
-              secondary="Ensure your CSV has these columns: Date, Type, Description, Amount"
+              primary="2. Upload one by one"
+              secondary="Upload each month's CSV file. The app will merge all data together."
             />
           </ListItem>
           <Divider />
           <ListItem>
             <ListItemText 
-              primary="3. Upload and Process"
-              secondary="Click 'Choose CSV File' and select your exported file. The app will automatically process and categorize your expenses."
+              primary="3. Verify data"
+              secondary="Check the Dashboard tab to see all your historical data across months."
             />
           </ListItem>
           <Divider />
           <ListItem>
             <ListItemText 
-              primary="4. Review and Confirm"
-              secondary="Check the upload results and confirm the data looks correct before proceeding."
+              primary="4. Add future expenses"
+              secondary="Use the Expense Tracker tab to add new expenses going forward."
             />
           </ListItem>
         </List>

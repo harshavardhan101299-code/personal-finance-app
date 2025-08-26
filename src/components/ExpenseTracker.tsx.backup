@@ -81,7 +81,7 @@ const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({ expenses, setExpenses, 
       date: formData.date,
       type: formData.type,
       description: formData.description,
-      paidBy: formData.paidBy || 'Me', // Use form data or default to 'Me'
+      paidBy: formData.paidBy,
       amount: parseFloat(formData.amount)
     };
 
@@ -101,15 +101,12 @@ const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({ expenses, setExpenses, 
   const totalAmount = expenses.reduce((sum, expense) => sum + expense.amount, 0);
 
   return (
-    <Box sx={{
-                minWidth: 250, width: '100%', py: 4, px: { xs: 2, sm: 3, md: 4 } }}>
-      <Box sx={{
-                minWidth: 250, display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+    <Box sx={{ width: '100%', py: 4, px: { xs: 2, sm: 3, md: 4 } }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
         <Typography 
           variant="h4" 
           component="h1"
-          sx={{
-                minWidth: 250, fontWeight: 700, color: '#1a237e' }}
+          sx={{ fontWeight: 700, color: '#1a237e' }}
         >
           Expense Tracker
         </Typography>
@@ -118,7 +115,6 @@ const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({ expenses, setExpenses, 
           startIcon={<AddIcon />}
           onClick={() => handleOpenDialog()}
           sx={{
-                minWidth: 250,
             backgroundColor: '#1a237e',
             '&:hover': {
               backgroundColor: '#000051',
@@ -134,19 +130,15 @@ const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({ expenses, setExpenses, 
       </Box>
 
       {/* Summary */}
-      <Paper sx={{
-                minWidth: 250, p: 4, mb: 4 }}>
-        <Typography variant="h6" gutterBottom sx={{
-                minWidth: 250, fontWeight: 600, mb: 2, color: '#1a237e' }}>
+      <Paper sx={{ p: 4, mb: 4 }}>
+        <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mb: 2, color: '#1a237e' }}>
           Summary
         </Typography>
-        <Box sx={{
-                minWidth: 250, display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'center' }}>
+        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'center' }}>
           <Chip 
             label={`Total Expenses: ₹${totalAmount.toLocaleString()}`} 
             color="primary"
-            sx={{
-                minWidth: 250, 
+            sx={{ 
               backgroundColor: '#1a237e',
               color: 'white',
               fontWeight: 600,
@@ -158,8 +150,7 @@ const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({ expenses, setExpenses, 
           <Chip 
             label={`Total Transactions: ${expenses.length}`} 
             color="secondary"
-            sx={{
-                minWidth: 250, 
+            sx={{ 
               backgroundColor: '#ff6f00',
               color: 'white',
               fontWeight: 600,
@@ -172,43 +163,33 @@ const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({ expenses, setExpenses, 
       </Paper>
 
       {/* Expenses Table */}
-      <Paper sx={{
-                minWidth: 250, p: 4 }}>
-        <Typography variant="h6" gutterBottom sx={{
-                minWidth: 250, fontWeight: 600, mb: 3, color: '#1a237e' }}>
+      <Paper sx={{ p: 4 }}>
+        <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mb: 3, color: '#1a237e' }}>
           All Expenses
         </Typography>
         <TableContainer>
           <Table>
             <TableHead>
-              <TableRow sx={{
-                minWidth: 250, backgroundColor: '#f5f5f5' }}>
-                <TableCell sx={{
-                minWidth: 250, fontWeight: 600, color: '#1a237e' }}>Date</TableCell>
-                <TableCell sx={{
-                minWidth: 250, fontWeight: 600, color: '#1a237e' }}>Type</TableCell>
-                <TableCell sx={{
-                minWidth: 250, fontWeight: 600, color: '#1a237e' }}>Description</TableCell>
-                <TableCell align="right" sx={{
-                minWidth: 250, fontWeight: 600, color: '#1a237e' }}>Amount</TableCell>
-                <TableCell sx={{
-                minWidth: 250, fontWeight: 600, color: '#1a237e' }}>Actions</TableCell>
+              <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+                <TableCell sx={{ fontWeight: 600, color: '#1a237e' }}>Date</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#1a237e' }}>Type</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#1a237e' }}>Description</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#1a237e' }}>Paid By</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 600, color: '#1a237e' }}>Amount</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#1a237e' }}>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {expenses.map((expense) => (
-                <TableRow key={expense.id} sx={{
-                minWidth: 250, '&:hover': { backgroundColor: '#f8f9fa' } }}>
-                  <TableCell sx={{
-                minWidth: 250, fontWeight: 500 }}>
+                <TableRow key={expense.id} sx={{ '&:hover': { backgroundColor: '#f8f9fa' } }}>
+                  <TableCell sx={{ fontWeight: 500 }}>
                     {format(new Date(expense.date), 'dd-MMM')}
                   </TableCell>
                   <TableCell>
                     <Chip 
                       label={expense.type} 
                       size="small" 
-                      sx={{
-                minWidth: 250, 
+                      sx={{ 
                         backgroundColor: '#1a237e',
                         color: 'white',
                         fontWeight: 600,
@@ -216,18 +197,16 @@ const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({ expenses, setExpenses, 
                       }}
                     />
                   </TableCell>
-                  <TableCell sx={{
-                minWidth: 250, fontWeight: 500 }}>{expense.description}</TableCell>
-                  <TableCell align="right" sx={{
-                minWidth: 250, fontWeight: 600, color: '#1a237e' }}>
+                  <TableCell sx={{ fontWeight: 500 }}>{expense.description}</TableCell>
+                  <TableCell sx={{ fontWeight: 500 }}>{expense.paidBy}</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 600, color: '#1a237e' }}>
                     ₹{expense.amount.toLocaleString()}
                   </TableCell>
                   <TableCell>
                     <IconButton 
                       size="small" 
                       onClick={() => handleOpenDialog(expense)}
-                      sx={{
-                minWidth: 250, 
+                      sx={{ 
                         color: '#1a237e',
                         '&:hover': { backgroundColor: 'rgba(26, 35, 126, 0.1)' }
                       }}
@@ -237,8 +216,7 @@ const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({ expenses, setExpenses, 
                     <IconButton 
                       size="small" 
                       onClick={() => handleDelete(expense.id)}
-                      sx={{
-                minWidth: 250, 
+                      sx={{ 
                         color: '#f44336',
                         '&:hover': { backgroundColor: 'rgba(244, 67, 54, 0.1)' }
                       }}
@@ -254,9 +232,11 @@ const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({ expenses, setExpenses, 
       </Paper>
 
       {/* Add/Edit Expense Dialog */}
-      <Dialog maxWidth="sm" fullWidth 
+      <Dialog 
         open={openDialog} 
-        onClose={handleCloseDialog}
+        onClose={handleCloseDialog} 
+        maxWidth="sm" 
+        fullWidth
         PaperProps={{
           sx: {
             borderRadius: 3,
@@ -264,18 +244,15 @@ const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({ expenses, setExpenses, 
           }
         }}
       >
-        <DialogTitle sx={{
-                minWidth: 250, 
+        <DialogTitle sx={{ 
           backgroundColor: '#1a237e', 
           color: 'white',
           fontWeight: 600
         }}>
           {editingExpense ? 'Edit Expense' : 'Add New Expense'}
         </DialogTitle>
-        <DialogContent sx={{
-                minWidth: 250, p: 4 }}>
-          <Box sx={{
-                minWidth: 250, display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <DialogContent sx={{ p: 4 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             <TextField
               label="Date"
               type="date"
@@ -284,7 +261,6 @@ const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({ expenses, setExpenses, 
               InputLabelProps={{ shrink: true }}
               fullWidth
               sx={{
-                minWidth: 250,
                 '& .MuiOutlinedInput-root': {
                   '&:hover fieldset': {
                     borderColor: '#1a237e',
@@ -303,7 +279,6 @@ const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({ expenses, setExpenses, 
                 label="Category"
                 onChange={(e) => setFormData({ ...formData, type: e.target.value })}
                 sx={{
-                minWidth: 250,
                   '& .MuiOutlinedInput-root': {
                     '&:hover fieldset': {
                       borderColor: '#1a237e',
@@ -330,7 +305,6 @@ const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({ expenses, setExpenses, 
               multiline
               rows={2}
               sx={{
-                minWidth: 250,
                 '& .MuiOutlinedInput-root': {
                   '&:hover fieldset': {
                     borderColor: '#1a237e',
@@ -349,7 +323,6 @@ const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({ expenses, setExpenses, 
                 label="Paid By"
                 onChange={(e) => setFormData({ ...formData, paidBy: e.target.value })}
                 sx={{
-                minWidth: 250,
                   '& .MuiOutlinedInput-root': {
                     '&:hover fieldset': {
                       borderColor: '#1a237e',
@@ -376,7 +349,6 @@ const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({ expenses, setExpenses, 
                 startAdornment: <span>₹</span>
               }}
               sx={{
-                minWidth: 250,
                 '& .MuiOutlinedInput-root': {
                   '&:hover fieldset': {
                     borderColor: '#1a237e',
@@ -389,12 +361,10 @@ const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({ expenses, setExpenses, 
             />
           </Box>
         </DialogContent>
-        <DialogActions sx={{
-                minWidth: 250, p: 3, gap: 2 }}>
+        <DialogActions sx={{ p: 3, gap: 2 }}>
           <Button 
             onClick={handleCloseDialog}
-            sx={{
-                minWidth: 250, 
+            sx={{ 
               color: '#546e7a',
               fontWeight: 600
             }}
@@ -405,7 +375,6 @@ const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({ expenses, setExpenses, 
             onClick={handleSubmit} 
             variant="contained"
             sx={{
-                minWidth: 250,
               backgroundColor: '#1a237e',
               '&:hover': {
                 backgroundColor: '#000051',

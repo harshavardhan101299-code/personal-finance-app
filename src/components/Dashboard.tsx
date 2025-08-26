@@ -25,14 +25,36 @@ import { ExpenseEntry, ExpenseCategory, BudgetStatus } from '../types';
 interface DashboardProps {
   expenses: ExpenseEntry[];
   categories: ExpenseCategory[];
+  selectedMonth: string;
+  setSelectedMonth: React.Dispatch<React.SetStateAction<string>>;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ expenses, categories }) => {
-  const [selectedMonth, setSelectedMonth] = useState('2024-04');
+const Dashboard: React.FC<DashboardProps> = ({ expenses, categories, selectedMonth, setSelectedMonth }) => {
 
-  // Calculate monthly expenses by category
+  // Filter expenses by selected month
+  const filteredExpenses = useMemo(() => {
+    console.log('Filtering expenses for month:', selectedMonth);
+    console.log('All expenses:', expenses);
+    console.log('Expenses length:', expenses.length);
+    
+    const filtered = expenses.filter(expense => {
+      const expenseDate = new Date(expense.date);
+      const expenseYear = expenseDate.getFullYear();
+      const expenseMonth = (expenseDate.getMonth() + 1).toString().padStart(2, '0');
+      const expenseYearMonth = `${expenseYear}-${expenseMonth}`;
+      
+      console.log(`Expense: ${expense.date} -> ${expenseYearMonth}, matches ${selectedMonth}: ${expenseYearMonth === selectedMonth}`);
+      
+      return expenseYearMonth === selectedMonth;
+    });
+    
+    console.log('Filtered expenses:', filtered);
+    return filtered;
+  }, [expenses, selectedMonth]);
+
+  // Calculate monthly expenses by category for selected month
   const monthlyExpenses = useMemo(() => {
-    const expensesByCategory = expenses.reduce((acc, expense) => {
+    const expensesByCategory = filteredExpenses.reduce((acc, expense) => {
       acc[expense.type] = (acc[expense.type] || 0) + expense.amount;
       return acc;
     }, {} as Record<string, number>);
@@ -43,22 +65,27 @@ const Dashboard: React.FC<DashboardProps> = ({ expenses, categories }) => {
         amount
       }))
       .sort((a, b) => b.amount - a.amount); // Sort by amount descending
-  }, [expenses]);
+  }, [filteredExpenses]);
 
-  // Calculate total expenses
+  // Calculate total expenses for selected month
   const totalExpenses = useMemo(() => {
-    return expenses.reduce((sum, expense) => sum + expense.amount, 0);
-  }, [expenses]);
+    return filteredExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+  }, [filteredExpenses]);
 
-  // Calculate budget status
+  // Calculate budget status for selected month
   const budgetStatus = useMemo(() => {
-    return categories
+    console.log('Calculating budget status for categories:', categories);
+    console.log('Monthly expenses:', monthlyExpenses);
+    
+    const status = categories
       .filter(category => category.budget !== null)
       .map(category => {
         const spent = monthlyExpenses.find(exp => exp.category === category.name)?.amount || 0;
         const budget = category.budget!;
         const remaining = budget - spent;
         const percentage = (spent / budget) * 100;
+
+        console.log(`Category: ${category.name}, Budget: ${budget}, Spent: ${spent}, Match: ${monthlyExpenses.find(exp => exp.category === category.name) ? 'YES' : 'NO'}`);
 
         return {
           category: category.name,
@@ -68,6 +95,9 @@ const Dashboard: React.FC<DashboardProps> = ({ expenses, categories }) => {
           percentage
         };
       });
+    
+    console.log('Budget status result:', status);
+    return status;
   }, [monthlyExpenses, categories]);
 
   const months = [
@@ -137,7 +167,7 @@ const Dashboard: React.FC<DashboardProps> = ({ expenses, categories }) => {
         <Card sx={{ height: '100%', transition: 'transform 0.2s', '&:hover': { transform: 'translateY(-4px)' } }}>
           <CardContent sx={{ p: 3, textAlign: 'center' }}>
             <Typography color="textSecondary" gutterBottom sx={{ fontSize: '1rem', fontWeight: 500 }}>
-              Total Expenses (April)
+              Total Expenses ({months.find(m => m.value === selectedMonth)?.label.split(' ')[0] || 'Selected Month'})
             </Typography>
             <Typography variant="h4" component="h2" sx={{ fontWeight: 700, color: '#1a237e' }}>
               ₹{totalExpenses.toLocaleString()}
@@ -163,7 +193,7 @@ const Dashboard: React.FC<DashboardProps> = ({ expenses, categories }) => {
               Number of Transactions
             </Typography>
             <Typography variant="h4" component="h2" sx={{ fontWeight: 700, color: '#1a237e' }}>
-              {expenses.length}
+              {filteredExpenses.length}
             </Typography>
           </CardContent>
         </Card>

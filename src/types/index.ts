@@ -46,9 +46,6 @@ export interface CSVRow {
   type?: string;
   Description?: string;
   description?: string;
-  'Paid By'?: string;
-  'Paid by'?: string;
-  'paid by'?: string;
   Amount?: string;
   amount?: string;
   [key: string]: string | undefined; // Allow any string key
