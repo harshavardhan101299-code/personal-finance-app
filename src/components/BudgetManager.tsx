@@ -41,11 +41,11 @@ const BudgetManager: React.FC<BudgetManagerProps> = ({ expenses, categories, set
   });
 
   const handleEdit = (category: ExpenseCategory) => {
-    setEditingCategory(category.id);
+    setEditingCategory(category.id || null);
     setEditForm({
       name: category.name,
-      description: category.description,
-      budget: category.budget?.toString() || ''
+      description: category.description || '',
+      budget: category.budget
     });
   };
 
@@ -312,7 +312,7 @@ const BudgetManager: React.FC<BudgetManagerProps> = ({ expenses, categories, set
                         <Box>
                           <IconButton 
                             size="small" 
-                            onClick={() => handleSave(category.id)}
+                            onClick={() => handleSave(category.id || '')}
                             sx={{ 
                               color: '#4caf50',
                               '&:hover': { backgroundColor: 'rgba(76, 175, 80, 0.1)' }
