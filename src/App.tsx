@@ -98,6 +98,19 @@ function App() {
       if (saved) {
         const parsed = JSON.parse(saved);
         console.log('Loaded expenses from localStorage:', parsed.length);
+        
+        // Check if we have the default data structure
+        const hasDefaultData = parsed.some((exp: ExpenseEntry) => exp.id.startsWith('apr-') || exp.id.startsWith('may-') || exp.id.startsWith('jun-') || exp.id.startsWith('jul-') || exp.id.startsWith('aug-'));
+        
+        if (!hasDefaultData) {
+          // If no default data, merge with default data
+          const mergedExpenses = [...allExpenses, ...parsed];
+          console.log('Merged default data with localStorage data:', mergedExpenses.length);
+          localStorage.setItem('expenses', JSON.stringify(mergedExpenses));
+          logDataValidation(mergedExpenses, expenseCategories);
+          return mergedExpenses;
+        }
+        
         // Validate loaded data
         logDataValidation(parsed, expenseCategories);
         return parsed;
@@ -105,9 +118,11 @@ function App() {
     } catch (error) {
       console.error('Error loading expenses from localStorage:', error);
     }
+    
     console.log('Using default expenses:', allExpenses.length);
-    // Validate default data
+    // Validate default data and save to localStorage
     logDataValidation(allExpenses, expenseCategories);
+    localStorage.setItem('expenses', JSON.stringify(allExpenses));
     return allExpenses;
   });
   
