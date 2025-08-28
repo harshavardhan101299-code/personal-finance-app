@@ -103,6 +103,48 @@ function App() {
     localStorage.setItem('expenses', JSON.stringify(expenses));
   }, [expenses]);
 
+  // Listen for localStorage changes from quick-add page
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'expenses' && e.newValue) {
+        try {
+          const newExpenses = JSON.parse(e.newValue);
+          setExpenses(newExpenses);
+        } catch (error) {
+          console.error('Error parsing expenses from localStorage:', error);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also check for localStorage changes on focus (for same-tab updates)
+    const handleFocus = () => {
+      const saved = localStorage.getItem('expenses');
+      if (saved) {
+        try {
+          const newExpenses = JSON.parse(saved);
+          setExpenses(prevExpenses => {
+            // Only update if the data is actually different
+            if (JSON.stringify(prevExpenses) !== saved) {
+              return newExpenses;
+            }
+            return prevExpenses;
+          });
+        } catch (error) {
+          console.error('Error parsing expenses from localStorage:', error);
+        }
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, []);
+
   const handleDataUpload = (uploadedExpenses: ExpenseEntry[], uploadedCategories: ExpenseCategory[]) => {
     setExpenses(uploadedExpenses);
     
