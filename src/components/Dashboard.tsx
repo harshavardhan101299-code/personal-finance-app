@@ -39,59 +39,18 @@ const Dashboard: React.FC<DashboardProps> = ({ expenses, categories, selectedMon
   console.log('Selected month:', selectedMonth);
   console.log('All expenses dates:', expenses.map(exp => exp.date).slice(0, 10));
 
-  // Robust expense filtering by month
+  // Simple expense filtering by month (clean data format)
   const filteredExpenses = useMemo(() => {
     console.log('=== FILTERING EXPENSES ===');
     console.log('Total expenses to filter:', expenses.length);
     console.log('Selected month:', selectedMonth);
     
     const filtered = expenses.filter(expense => {
-      console.log(`Processing expense: ${expense.date} (${expense.type} - ₹${expense.amount})`);
-      
-      // Handle different date formats
-      let year, month;
-      
-      if (expense.date.includes('-')) {
-        // Format: YYYY-MM-DD
-        const dateParts = expense.date.split('-');
-        if (dateParts.length === 3) {
-          year = dateParts[0];
-          month = dateParts[1].padStart(2, '0');
-        } else {
-          console.warn('Invalid date format (dashes):', expense.date);
-          return false;
-        }
-      } else if (expense.date.includes('/')) {
-        // Format: DD/MM/YYYY or MM/DD/YYYY
-        const dateParts = expense.date.split('/');
-        if (dateParts.length === 3) {
-          // Assume DD/MM/YYYY format
-          year = dateParts[2];
-          month = dateParts[1].padStart(2, '0');
-        } else {
-          console.warn('Invalid date format (slashes):', expense.date);
-          return false;
-        }
-      } else {
-        // Try to parse as Date object
-        try {
-          const date = new Date(expense.date);
-          if (isNaN(date.getTime())) {
-            console.warn('Invalid date format (unknown):', expense.date);
-            return false;
-          }
-          year = date.getFullYear().toString();
-          month = (date.getMonth() + 1).toString().padStart(2, '0');
-        } catch (error) {
-          console.warn('Error parsing date:', expense.date, error);
-          return false;
-        }
-      }
-      
-      const expenseYearMonth = `${year}-${month}`;
+      // Simple YYYY-MM-DD format parsing
+      const expenseYearMonth = expense.date.substring(0, 7); // Get YYYY-MM part
       const matches = expenseYearMonth === selectedMonth;
       
-      console.log(`Date: ${expense.date} -> Parsed: ${expenseYearMonth}, matches ${selectedMonth}: ${matches}`);
+      console.log(`Expense: ${expense.date} -> ${expenseYearMonth}, matches ${selectedMonth}: ${matches}`);
       
       return matches;
     });
