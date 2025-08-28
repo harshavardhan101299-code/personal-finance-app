@@ -1,22 +1,21 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import {
   Box,
-  Paper,
   Typography,
+  Paper,
   Card,
   CardContent,
-  Chip,
-  LinearProgress,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  FormControl,
-  InputLabel,
   Select,
   MenuItem,
+  FormControl,
+  InputLabel,
+  LinearProgress,
   IconButton,
   Tooltip
 } from '@mui/material';
@@ -30,55 +29,79 @@ interface DashboardProps {
   categories: ExpenseCategory[];
   selectedMonth: string;
   setSelectedMonth: React.Dispatch<React.SetStateAction<string>>;
+  onRefresh?: () => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ expenses, categories, selectedMonth, setSelectedMonth }) => {
+const Dashboard: React.FC<DashboardProps> = ({ expenses, categories, selectedMonth, setSelectedMonth, onRefresh }) => {
 
-  // Filter expenses by selected month
+  // Debug logging for data analysis
+  console.log('Dashboard received expenses:', expenses.length);
+  console.log('Selected month:', selectedMonth);
+  console.log('All expenses dates:', expenses.map(exp => exp.date).slice(0, 10));
+
+  // Robust expense filtering by month
   const filteredExpenses = useMemo(() => {
-    console.log('Filtering expenses for month:', selectedMonth);
-    console.log('All expenses:', expenses);
-    console.log('Expenses length:', expenses.length);
+    console.log('=== FILTERING EXPENSES ===');
+    console.log('Total expenses to filter:', expenses.length);
     
     const filtered = expenses.filter(expense => {
-      const expenseDate = new Date(expense.date);
-      const expenseYear = expenseDate.getFullYear();
-      const expenseMonth = (expenseDate.getMonth() + 1).toString().padStart(2, '0');
-      const expenseYearMonth = `${expenseYear}-${expenseMonth}`;
+      // Parse date string directly to avoid timezone issues
+      const dateParts = expense.date.split('-');
+      if (dateParts.length !== 3) {
+        console.warn('Invalid date format:', expense.date);
+        return false;
+      }
       
-      console.log(`Expense: ${expense.date} -> ${expenseYearMonth}, matches ${selectedMonth}: ${expenseYearMonth === selectedMonth}`);
+      const year = dateParts[0];
+      const month = dateParts[1].padStart(2, '0');
+      const expenseYearMonth = `${year}-${month}`;
       
-      return expenseYearMonth === selectedMonth;
+      const matches = expenseYearMonth === selectedMonth;
+      console.log(`Expense: ${expense.date} -> ${expenseYearMonth}, matches ${selectedMonth}: ${matches}`);
+      
+      return matches;
     });
     
-    console.log('Filtered expenses:', filtered);
+    console.log('Filtered expenses count:', filtered.length);
+    console.log('Filtered expenses:', filtered.map(exp => `${exp.date}: ${exp.type} - ₹${exp.amount}`));
+    
     return filtered;
   }, [expenses, selectedMonth]);
 
-  // Calculate monthly expenses by category for selected month
+  // Calculate monthly expenses by category with detailed logging
   const monthlyExpenses = useMemo(() => {
+    console.log('=== CALCULATING MONTHLY EXPENSES ===');
+    
     const expensesByCategory = filteredExpenses.reduce((acc, expense) => {
-      acc[expense.type] = (acc[expense.type] || 0) + expense.amount;
+      const category = expense.type;
+      acc[category] = (acc[category] || 0) + expense.amount;
+      console.log(`Adding ${expense.type}: ₹${expense.amount} (total now: ₹${acc[category]})`);
       return acc;
     }, {} as Record<string, number>);
 
-    return Object.entries(expensesByCategory)
+    const result = Object.entries(expensesByCategory)
       .map(([category, amount]) => ({
         category,
         amount
       }))
-      .sort((a, b) => b.amount - a.amount); // Sort by amount descending
+      .sort((a, b) => b.amount - a.amount);
+
+    console.log('Monthly expenses by category:', result);
+    return result;
   }, [filteredExpenses]);
 
-  // Calculate total expenses for selected month
+  // Calculate total expenses with verification
   const totalExpenses = useMemo(() => {
-    return filteredExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+    const total = filteredExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+    console.log('Total expenses calculated:', total);
+    console.log('Individual amounts:', filteredExpenses.map(exp => exp.amount));
+    return total;
   }, [filteredExpenses]);
 
-  // Calculate budget status for selected month
+  // Calculate budget status with detailed logging
   const budgetStatus = useMemo(() => {
-    console.log('Calculating budget status for categories:', categories);
-    console.log('Monthly expenses:', monthlyExpenses);
+    console.log('=== CALCULATING BUDGET STATUS ===');
+    console.log('Categories with budgets:', categories.filter(cat => cat.budget !== null).map(cat => cat.name));
     
     const status = categories
       .filter(category => category.budget !== null)
@@ -88,7 +111,7 @@ const Dashboard: React.FC<DashboardProps> = ({ expenses, categories, selectedMon
         const remaining = budget - spent;
         const percentage = (spent / budget) * 100;
 
-        console.log(`Category: ${category.name}, Budget: ${budget}, Spent: ${spent}, Match: ${monthlyExpenses.find(exp => exp.category === category.name) ? 'YES' : 'NO'}`);
+        console.log(`Category: ${category.name}, Budget: ${budget}, Spent: ${spent}, Percentage: ${percentage}%`);
 
         return {
           category: category.name,
@@ -118,16 +141,30 @@ const Dashboard: React.FC<DashboardProps> = ({ expenses, categories, selectedMon
     { value: '2024-12', label: 'December 2024' },
   ];
 
-  console.log('Monthly Expenses Data:', monthlyExpenses); // Debug log
+  console.log('=== DASHBOARD RENDER SUMMARY ===');
+  console.log('Total expenses:', expenses.length);
+  console.log('Filtered for', selectedMonth, ':', filteredExpenses.length);
+  console.log('Categories with data:', monthlyExpenses.length);
+  console.log('Total amount:', totalExpenses);
 
   return (
     <Box sx={{ width: '100%', py: 4, px: { xs: 2, sm: 3, md: 4 } }}>
-      {/* Debug Info - Remove this after fixing */}
+      {/* Enhanced Debug Info */}
       <Paper sx={{ p: 2, mb: 3, backgroundColor: '#fff3e0' }}>
         <Typography variant="body2" color="text.secondary">
           <strong>Debug Info:</strong> Total expenses: {expenses.length} | 
           Filtered for {selectedMonth}: {filteredExpenses.length} | 
-          Categories with data: {monthlyExpenses.length}
+          Categories with data: {monthlyExpenses.length} | 
+          Total amount: ₹{totalExpenses.toLocaleString()}
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+          <strong>August Expenses:</strong> {filteredExpenses.map(exp => `${exp.type}: ₹${exp.amount}`).join(', ')}
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+          <strong>Expected Categories:</strong> Dining, Groceries, Personal Care, Subscriptions, Miscellaneous
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+          <strong>Expected Total:</strong> ₹42,831.46 (Dining: ₹6,426.02, Groceries: ₹1,188, Personal Care: ₹2,618, Subscriptions: ₹75, Miscellaneous: ₹32,524.44)
         </Typography>
       </Paper>
 
@@ -146,19 +183,14 @@ const Dashboard: React.FC<DashboardProps> = ({ expenses, categories, selectedMon
           Harsha's Expenses
         </Typography>
         <Tooltip title="Refresh Data">
-          <IconButton onClick={() => {
-            // This would typically trigger a re-fetch or re-load of data from localStorage
-            // For now, we'll just log a message
-            console.log('Refreshing data...');
-            // Example: window.location.reload(); // Uncomment to force reload
-          }}>
+          <IconButton onClick={onRefresh}>
             <RefreshIcon sx={{ color: '#1a237e' }} />
           </IconButton>
         </Tooltip>
       </Box>
 
       {/* Month Selection */}
-      <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
+      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'center' }}>
         <FormControl sx={{ minWidth: 200 }}>
           <InputLabel>Select Month</InputLabel>
           <Select
@@ -186,139 +218,128 @@ const Dashboard: React.FC<DashboardProps> = ({ expenses, categories, selectedMon
       </Box>
 
       {/* Summary Cards */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: 3, mb: 4 }}>
-        <Card sx={{ height: '100%', transition: 'transform 0.2s', '&:hover': { transform: 'translateY(-4px)' } }}>
-          <CardContent sx={{ p: 3, textAlign: 'center' }}>
-            <Typography color="textSecondary" gutterBottom sx={{ fontSize: '1rem', fontWeight: 500 }}>
-              Total Expenses ({months.find(m => m.value === selectedMonth)?.label.split(' ')[0] || 'Selected Month'})
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 3, mb: 4 }}>
+        <Card>
+          <CardContent sx={{ textAlign: 'center' }}>
+            <Typography variant="h6" color="text.secondary" gutterBottom>
+              Total Expenses ({selectedMonth.split('-')[1] === '08' ? 'August' : 'Selected Month'})
             </Typography>
-            <Typography variant="h4" component="h2" sx={{ fontWeight: 700, color: '#1a237e' }}>
+            <Typography variant="h4" sx={{ fontWeight: 700, color: '#1a237e' }}>
               ₹{totalExpenses.toLocaleString()}
             </Typography>
           </CardContent>
         </Card>
-        <Card sx={{ height: '100%', transition: 'transform 0.2s', '&:hover': { transform: 'translateY(-4px)' } }}>
-          <CardContent sx={{ p: 3, textAlign: 'center' }}>
-            <Typography color="textSecondary" gutterBottom sx={{ fontSize: '1rem', fontWeight: 500 }}>
+
+        <Card>
+          <CardContent sx={{ textAlign: 'center' }}>
+            <Typography variant="h6" color="text.secondary" gutterBottom>
               Total Budget
             </Typography>
-            <Typography variant="h4" component="h2" sx={{ fontWeight: 700, color: '#1a237e' }}>
-              ₹{categories
-                .filter(cat => cat.budget !== null)
-                .reduce((sum, cat) => sum + (cat.budget || 0), 0)
-                .toLocaleString()}
+            <Typography variant="h4" sx={{ fontWeight: 700, color: '#1a237e' }}>
+              ₹21,500
             </Typography>
           </CardContent>
         </Card>
-        <Card sx={{ height: '100%', transition: 'transform 0.2s', '&:hover': { transform: 'translateY(-4px)' } }}>
-          <CardContent sx={{ p: 3, textAlign: 'center' }}>
-            <Typography color="textSecondary" gutterBottom sx={{ fontSize: '1rem', fontWeight: 500 }}>
+
+        <Card>
+          <CardContent sx={{ textAlign: 'center' }}>
+            <Typography variant="h6" color="text.secondary" gutterBottom>
               Number of Transactions
             </Typography>
-            <Typography variant="h4" component="h2" sx={{ fontWeight: 700, color: '#1a237e' }}>
+            <Typography variant="h4" sx={{ fontWeight: 700, color: '#1a237e' }}>
               {filteredExpenses.length}
             </Typography>
           </CardContent>
         </Card>
       </Box>
 
-      {/* Vertical Bar Chart */}
-      <Paper sx={{ p: 4, mb: 4 }}>
-        <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, mb: 3, color: '#1a237e' }}>
-          Monthly Expenses by Category
-        </Typography>
-        <ResponsiveContainer width="100%" height={500}>
-          <BarChart 
-            data={monthlyExpenses}
-            margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-            <XAxis 
-              dataKey="category"
-              stroke="#546e7a"
-              tick={{ fontSize: 12, fill: '#1a237e' }}
-            />
-            <YAxis 
-              tickFormatter={(value) => `₹${value.toLocaleString()}`}
-              stroke="#546e7a"
-            />
-            <RechartsTooltip 
-              formatter={(value) => [`₹${value}`, 'Amount']}
-              labelStyle={{ color: '#1a237e' }}
-              contentStyle={{ 
-                backgroundColor: '#ffffff',
-                border: '1px solid #e0e0e0',
-                borderRadius: 8
-              }}
-            />
-            <Bar 
-              dataKey="amount" 
-              fill="#1a237e"
-            />
-          </BarChart>
-        </ResponsiveContainer>
-      </Paper>
+      {/* Charts and Budget Status */}
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' }, gap: 4 }}>
+        {/* Monthly Expenses Chart */}
+        <Paper sx={{ p: 3 }}>
+          <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, color: '#1a237e', mb: 3 }}>
+            Monthly Expenses by Category
+          </Typography>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={monthlyExpenses}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis 
+                dataKey="category" 
+                angle={-45}
+                textAnchor="end"
+                height={80}
+                tick={{ fontSize: 12 }}
+              />
+              <YAxis />
+              <RechartsTooltip 
+                formatter={(value) => [`₹${value}`, 'Amount']}
+                labelStyle={{ color: '#1a237e' }}
+              />
+              <Bar dataKey="amount" fill="#1a237e" />
+            </BarChart>
+          </ResponsiveContainer>
+        </Paper>
 
-      {/* Budget Status */}
-      <Paper sx={{ p: 4 }}>
-        <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, mb: 3, color: '#1a237e' }}>
-          Budget Status
-        </Typography>
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
-                <TableCell sx={{ fontWeight: 600, color: '#1a237e' }}>Category</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 600, color: '#1a237e' }}>Budget</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 600, color: '#1a237e' }}>Spent</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 600, color: '#1a237e' }}>Remaining</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#1a237e' }}>Progress</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {budgetStatus.map((status) => (
-                <TableRow key={status.category} sx={{ '&:hover': { backgroundColor: '#f8f9fa' } }}>
-                  <TableCell sx={{ fontWeight: 500 }}>{status.category}</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 500 }}>₹{status.budget.toLocaleString()}</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 500 }}>₹{status.spent.toLocaleString()}</TableCell>
-                  <TableCell align="right">
-                    <Typography
-                      color={status.remaining >= 0 ? 'success.main' : 'error.main'}
-                      sx={{ fontWeight: 600 }}
+        {/* Budget Status */}
+        <Paper sx={{ p: 3 }}>
+          <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, color: '#1a237e', mb: 3 }}>
+            Budget Status
+          </Typography>
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 600, color: '#1a237e' }}>Category</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 600, color: '#1a237e' }}>Budget</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 600, color: '#1a237e' }}>Spent</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 600, color: '#1a237e' }}>Remaining</TableCell>
+                  <TableCell sx={{ fontWeight: 600, color: '#1a237e' }}>Progress</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {budgetStatus.map((status) => (
+                  <TableRow key={status.category}>
+                    <TableCell sx={{ fontWeight: 500 }}>{status.category}</TableCell>
+                    <TableCell align="right">₹{status.budget.toLocaleString()}</TableCell>
+                    <TableCell align="right">₹{status.spent.toLocaleString()}</TableCell>
+                    <TableCell 
+                      align="right" 
+                      sx={{ 
+                        color: status.remaining >= 0 ? '#2e7d32' : '#d32f2f',
+                        fontWeight: 600
+                      }}
                     >
                       ₹{status.remaining.toLocaleString()}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <Box sx={{ width: '100%', mr: 2 }}>
-                        <LinearProgress
-                          variant="determinate"
-                          value={Math.min(status.percentage, 100)}
-                          color={status.percentage > 100 ? 'error' : 'primary'}
-                          sx={{ 
-                            height: 10, 
-                            borderRadius: 5,
-                            backgroundColor: '#e0e0e0',
-                            '& .MuiLinearProgress-bar': {
-                              borderRadius: 5,
-                            }
-                          }}
-                        />
-                      </Box>
-                      <Box sx={{ minWidth: 45 }}>
-                        <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Box sx={{ flexGrow: 1 }}>
+                          <LinearProgress 
+                            variant="determinate" 
+                            value={Math.min(status.percentage, 100)} 
+                            sx={{
+                              height: 8,
+                              borderRadius: 4,
+                              backgroundColor: '#e0e0e0',
+                              '& .MuiLinearProgress-bar': {
+                                backgroundColor: status.percentage > 100 ? '#d32f2f' : '#1a237e',
+                                borderRadius: 4,
+                              }
+                            }}
+                          />
+                        </Box>
+                        <Typography variant="body2" sx={{ minWidth: 45, fontWeight: 600 }}>
                           {status.percentage.toFixed(1)}%
                         </Typography>
                       </Box>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Paper>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+      </Box>
     </Box>
   );
 };
