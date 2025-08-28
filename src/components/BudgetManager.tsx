@@ -45,7 +45,7 @@ const BudgetManager: React.FC<BudgetManagerProps> = ({ expenses, categories, set
     setEditForm({
       name: category.name,
       description: category.description || '',
-      budget: category.budget
+      budget: category.budget?.toString() || ''
     });
   };
 
