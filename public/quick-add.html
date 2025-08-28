@@ -236,49 +236,44 @@
     <script>
         // Set August 2025 date as default for testing
         const augustDate = '2025-08-28'; // You can change this to any August date
-        document.getElementById('date').value = augustDate;
+        
+        // Initialize form when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('date').value = augustDate;
+            console.log('Quick-add form initialized with date:', augustDate);
+        });
 
-        // Handle form submission
+        // Handle form submission with better error handling
         document.getElementById('expenseForm').addEventListener('submit', function(e) {
             e.preventDefault();
+            console.log('Form submitted!');
             
-            const form = e.target;
-            const formData = new FormData(form);
-            
-            // Get form values
-            const expense = {
-                id: Date.now().toString(),
-                date: formData.get('date'),
-                type: formData.get('category'),
-                description: formData.get('description'),
-                paidBy: formData.get('paidBy'),
-                amount: parseFloat(formData.get('amount'))
-            };
-
-            console.log('Adding expense with date:', expense.date);
-
-            // Add loading state
-            form.classList.add('loading');
-            
-            // Save to localStorage with robust error handling
             try {
+                const form = e.target;
+                const formData = new FormData(form);
+                
+                // Get form values
+                const expense = {
+                    id: Date.now().toString(),
+                    date: formData.get('date'),
+                    type: formData.get('category'),
+                    description: formData.get('description'),
+                    paidBy: formData.get('paidBy'),
+                    amount: parseFloat(formData.get('amount'))
+                };
+
+                console.log('Adding expense:', expense);
+
+                // Save to localStorage
                 const existingExpenses = JSON.parse(localStorage.getItem('expenses') || '[]');
                 const newExpenses = [...existingExpenses, expense];
                 localStorage.setItem('expenses', JSON.stringify(newExpenses));
                 
-                // Trigger storage event for cross-tab sync
-                window.dispatchEvent(new StorageEvent('storage', {
-                    key: 'expenses',
-                    newValue: JSON.stringify(newExpenses),
-                    oldValue: JSON.stringify(existingExpenses)
-                }));
+                console.log('Saved to localStorage. Total expenses now:', newExpenses.length);
                 
                 // Show success message
                 document.getElementById('successMessage').style.display = 'block';
                 document.getElementById('errorMessage').style.display = 'none';
-                
-                console.log('Expense added successfully:', expense);
-                console.log('Total expenses now:', newExpenses.length);
                 
                 // Reset form after 2 seconds
                 setTimeout(() => {
@@ -288,11 +283,8 @@
                 
             } catch (error) {
                 console.error('Error adding expense:', error);
-                // Show error message
                 document.getElementById('errorMessage').style.display = 'block';
                 document.getElementById('successMessage').style.display = 'none';
-            } finally {
-                form.classList.remove('loading');
             }
         });
 
