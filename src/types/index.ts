@@ -1,8 +1,9 @@
 export interface ExpenseCategory {
-  id: string;
+  id?: string;
   name: string;
-  description: string;
+  description?: string;
   budget: number | null; // null for categories like Housing and Miscellaneous
+  color?: string; // Optional color for UI display
 }
 
 export interface ExpenseEntry {
