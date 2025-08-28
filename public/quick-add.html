@@ -234,8 +234,9 @@
     </div>
 
     <script>
-        // Set today's date as default
-        document.getElementById('date').value = new Date().toISOString().split('T')[0];
+        // Set August 2024 date as default for testing
+        const augustDate = '2024-08-28'; // You can change this to any August date
+        document.getElementById('date').value = augustDate;
 
         // Handle form submission
         document.getElementById('expenseForm').addEventListener('submit', function(e) {
@@ -253,6 +254,8 @@
                 paidBy: formData.get('paidBy'),
                 amount: parseFloat(formData.get('amount'))
             };
+
+            console.log('Adding expense with date:', expense.date);
 
             // Add loading state
             form.classList.add('loading');
@@ -295,7 +298,7 @@
 
         function resetForm() {
             document.getElementById('expenseForm').reset();
-            document.getElementById('date').value = new Date().toISOString().split('T')[0];
+            document.getElementById('date').value = augustDate;
         }
 
         // Auto-focus on description field for better UX
