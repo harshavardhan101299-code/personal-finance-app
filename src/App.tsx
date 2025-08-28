@@ -191,8 +191,9 @@ function App() {
         const saved = localStorage.getItem('expenses');
         if (saved) {
           const parsed = JSON.parse(saved);
-          if (parsed.length !== expenses.length) {
-            console.log('Auto-refresh: detected change in localStorage');
+          // Only update if we have more expenses (new additions)
+          if (parsed.length > expenses.length) {
+            console.log('Auto-refresh: detected new expenses in localStorage');
             setExpenses(parsed);
           }
         }
