@@ -89,7 +89,7 @@ const theme = createTheme({
 
 function App() {
   const [currentTab, setCurrentTab] = useState(0);
-  const [selectedMonth, setSelectedMonth] = useState("2024-08");
+  const [selectedMonth, setSelectedMonth] = useState('2025-08');
   
   // Robust expense management with localStorage sync
   const [expenses, setExpenses] = useState<ExpenseEntry[]>(() => {
