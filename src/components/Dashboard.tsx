@@ -16,11 +16,14 @@ import {
   FormControl,
   InputLabel,
   Select,
-  MenuItem
+  MenuItem,
+  IconButton,
+  Tooltip
 } from '@mui/material';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 import { format } from 'date-fns';
 import { ExpenseEntry, ExpenseCategory, BudgetStatus } from '../types';
+import RefreshIcon from '@mui/icons-material/Refresh';
 
 interface DashboardProps {
   expenses: ExpenseEntry[];
@@ -119,20 +122,40 @@ const Dashboard: React.FC<DashboardProps> = ({ expenses, categories, selectedMon
 
   return (
     <Box sx={{ width: '100%', py: 4, px: { xs: 2, sm: 3, md: 4 } }}>
-      <Typography 
-        variant="h3" 
-        component="h1" 
-        gutterBottom 
-        align="center" 
-        sx={{ 
-          mb: 4,
-          fontWeight: 700,
-          color: '#1a237e',
-          fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' }
-        }}
-      >
-        Harsha's Expenses
-      </Typography>
+      {/* Debug Info - Remove this after fixing */}
+      <Paper sx={{ p: 2, mb: 3, backgroundColor: '#fff3e0' }}>
+        <Typography variant="body2" color="text.secondary">
+          <strong>Debug Info:</strong> Total expenses: {expenses.length} | 
+          Filtered for {selectedMonth}: {filteredExpenses.length} | 
+          Categories with data: {monthlyExpenses.length}
+        </Typography>
+      </Paper>
+
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+        <Typography 
+          variant="h3" 
+          component="h1" 
+          gutterBottom 
+          align="center" 
+          sx={{ 
+            fontWeight: 700,
+            color: '#1a237e',
+            fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' }
+          }}
+        >
+          Harsha's Expenses
+        </Typography>
+        <Tooltip title="Refresh Data">
+          <IconButton onClick={() => {
+            // This would typically trigger a re-fetch or re-load of data from localStorage
+            // For now, we'll just log a message
+            console.log('Refreshing data...');
+            // Example: window.location.reload(); // Uncomment to force reload
+          }}>
+            <RefreshIcon sx={{ color: '#1a237e' }} />
+          </IconButton>
+        </Tooltip>
+      </Box>
 
       {/* Month Selection */}
       <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
@@ -219,7 +242,7 @@ const Dashboard: React.FC<DashboardProps> = ({ expenses, categories, selectedMon
               tickFormatter={(value) => `₹${value.toLocaleString()}`}
               stroke="#546e7a"
             />
-            <Tooltip 
+            <RechartsTooltip 
               formatter={(value) => [`₹${value}`, 'Amount']}
               labelStyle={{ color: '#1a237e' }}
               contentStyle={{ 

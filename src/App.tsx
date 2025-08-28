@@ -103,12 +103,14 @@ function App() {
     localStorage.setItem('expenses', JSON.stringify(expenses));
   }, [expenses]);
 
-  // Listen for localStorage changes from quick-add page
+  // Force refresh expenses from localStorage on app focus and periodically
   useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'expenses' && e.newValue) {
+    const refreshExpenses = () => {
+      const saved = localStorage.getItem('expenses');
+      if (saved) {
         try {
-          const newExpenses = JSON.parse(e.newValue);
+          const newExpenses = JSON.parse(saved);
+          console.log('Refreshing expenses from localStorage:', newExpenses.length, 'expenses');
           setExpenses(newExpenses);
         } catch (error) {
           console.error('Error parsing expenses from localStorage:', error);
@@ -116,32 +118,22 @@ function App() {
       }
     };
 
-    window.addEventListener('storage', handleStorageChange);
-    
-    // Also check for localStorage changes on focus (for same-tab updates)
+    // Refresh on focus (when user switches back to tab)
     const handleFocus = () => {
-      const saved = localStorage.getItem('expenses');
-      if (saved) {
-        try {
-          const newExpenses = JSON.parse(saved);
-          setExpenses(prevExpenses => {
-            // Only update if the data is actually different
-            if (JSON.stringify(prevExpenses) !== saved) {
-              return newExpenses;
-            }
-            return prevExpenses;
-          });
-        } catch (error) {
-          console.error('Error parsing expenses from localStorage:', error);
-        }
-      }
+      console.log('App focused - refreshing expenses');
+      refreshExpenses();
     };
+
+    // Refresh every 5 seconds to catch quick-add updates
+    const interval = setInterval(() => {
+      refreshExpenses();
+    }, 5000);
 
     window.addEventListener('focus', handleFocus);
 
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('focus', handleFocus);
+      clearInterval(interval);
     };
   }, []);
 
