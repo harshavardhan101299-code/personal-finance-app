@@ -27,7 +27,7 @@
             box-shadow: 0 8px 32px rgba(26, 35, 126, 0.2);
             padding: 32px;
             width: 100%;
-            max-width: 400px;
+            max-width: 450px;
         }
 
         .header {
@@ -91,6 +91,29 @@
             font-weight: 600;
         }
 
+        .smart-suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .suggestion-chip {
+            background: #e3f2fd;
+            color: #1a237e;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            cursor: pointer;
+            border: 1px solid #bbdefb;
+            transition: all 0.2s ease;
+        }
+
+        .suggestion-chip:hover {
+            background: #1a237e;
+            color: white;
+        }
+
         .buttons {
             display: flex;
             gap: 12px;
@@ -151,6 +174,39 @@
             pointer-events: none;
         }
 
+        .quick-actions {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .quick-action {
+            flex: 1;
+            padding: 8px 12px;
+            background: #f5f5f5;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .quick-action:hover {
+            background: #1a237e;
+            color: white;
+        }
+
+        .auto-category {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            margin-top: 8px;
+            display: none;
+        }
+
         @media (max-width: 480px) {
             .container {
                 padding: 24px;
@@ -159,6 +215,10 @@
             
             .header h1 {
                 font-size: 20px;
+            }
+
+            .buttons {
+                flex-direction: column;
             }
         }
     </style>
@@ -170,10 +230,29 @@
             <p>Harsha's Personal Finance</p>
         </div>
 
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <div class="quick-action" onclick="setQuickAmount('50')">₹50</div>
+            <div class="quick-action" onclick="setQuickAmount('100')">₹100</div>
+            <div class="quick-action" onclick="setQuickAmount('200')">₹200</div>
+            <div class="quick-action" onclick="setQuickAmount('500')">₹500</div>
+        </div>
+
         <form id="expenseForm">
             <div class="form-group">
                 <label for="date">Date</label>
                 <input type="date" id="date" name="date" required>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" name="description" rows="2" placeholder="What was this expense for?" required></textarea>
+                <div class="smart-suggestions" id="descriptionSuggestions">
+                    <div class="suggestion-chip" onclick="setDescription('Chai')">Chai</div>
+                    <div class="suggestion-chip" onclick="setDescription('Biryani')">Biryani</div>
+                    <div class="suggestion-chip" onclick="setDescription('Diesel')">Diesel</div>
+                    <div class="suggestion-chip" onclick="setDescription('Petrol')">Petrol</div>
+                </div>
             </div>
 
             <div class="form-group">
@@ -192,11 +271,7 @@
                     <option value="Housing">Housing</option>
                     <option value="Miscellaneous">Miscellaneous</option>
                 </select>
-            </div>
-
-            <div class="form-group">
-                <label for="description">Description</label>
-                <textarea id="description" name="description" rows="3" placeholder="What was this expense for?" required></textarea>
+                <div class="auto-category" id="autoCategory"></div>
             </div>
 
             <div class="form-group">
@@ -237,10 +312,116 @@
         // Set August 2025 date as default for testing
         const augustDate = '2025-08-28'; // You can change this to any August date
         
+        // Auto-categorization rules
+        const categoryRules = {
+            'chai': 'Dining',
+            'biryani': 'Dining',
+            'diesel': 'Travel',
+            'petrol': 'Travel',
+            'coffee': 'Dining',
+            'lunch': 'Dining',
+            'dinner': 'Dining',
+            'breakfast': 'Dining',
+            'food': 'Dining',
+            'restaurant': 'Dining',
+            'groceries': 'Groceries',
+            'vegetables': 'Groceries',
+            'fruits': 'Groceries',
+            'milk': 'Groceries',
+            'bread': 'Groceries',
+            'transport': 'Travel',
+            'uber': 'Travel',
+            'ola': 'Travel',
+            'metro': 'Travel',
+            'bus': 'Travel',
+            'train': 'Travel',
+            'flight': 'Travel',
+            'hotel': 'Travel',
+            'netflix': 'Entertainment',
+            'amazon prime': 'Entertainment',
+            'spotify': 'Entertainment',
+            'youtube': 'Entertainment',
+            'movie': 'Entertainment',
+            'theatre': 'Entertainment',
+            'shopping': 'Miscellaneous',
+            'clothes': 'Miscellaneous',
+            'shoes': 'Miscellaneous',
+            'electronics': 'Miscellaneous',
+            'phone': 'Miscellaneous',
+            'laptop': 'Miscellaneous',
+            'subscription': 'Subscriptions',
+            'software': 'Subscriptions',
+            'app': 'Subscriptions',
+            'service': 'Subscriptions',
+            'work': 'Work',
+            'office': 'Work',
+            'business': 'Work',
+            'learning': 'Learning & Growth',
+            'course': 'Learning & Growth',
+            'book': 'Learning & Growth',
+            'education': 'Learning & Growth',
+            'rent': 'Housing',
+            'electricity': 'Housing',
+            'water': 'Housing',
+            'gas': 'Housing',
+            'maintenance': 'Housing',
+            'personal care': 'Personal Care',
+            'haircut': 'Personal Care',
+            'salon': 'Personal Care',
+            'spa': 'Personal Care',
+            'medicine': 'Personal Care',
+            'health': 'Personal Care'
+        };
+        
         // Initialize form when page loads
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('date').value = augustDate;
             console.log('Quick-add form initialized with date:', augustDate);
+        });
+
+        // Quick amount setters
+        function setQuickAmount(amount) {
+            document.getElementById('amount').value = amount;
+            document.getElementById('amount').focus();
+        }
+
+        // Quick description setters
+        function setDescription(desc) {
+            document.getElementById('description').value = desc;
+            autoCategorize(desc);
+            document.getElementById('category').focus();
+        }
+
+        // Auto-categorization based on description
+        function autoCategorize(description) {
+            const desc = description.toLowerCase();
+            let suggestedCategory = null;
+            
+            for (const [keyword, category] of Object.entries(categoryRules)) {
+                if (desc.includes(keyword)) {
+                    suggestedCategory = category;
+                    break;
+                }
+            }
+            
+            if (suggestedCategory) {
+                document.getElementById('category').value = suggestedCategory;
+                const autoCategoryDiv = document.getElementById('autoCategory');
+                autoCategoryDiv.textContent = `Auto-categorized as: ${suggestedCategory}`;
+                autoCategoryDiv.style.display = 'block';
+                
+                // Hide after 3 seconds
+                setTimeout(() => {
+                    autoCategoryDiv.style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        // Auto-categorize when description changes
+        document.getElementById('description').addEventListener('input', function(e) {
+            if (e.target.value.length > 3) {
+                autoCategorize(e.target.value);
+            }
         });
 
         // Handle form submission with better error handling
@@ -255,7 +436,7 @@
                 // Get form values
                 const expense = {
                     id: Date.now().toString(),
-                    date: formData.get('date'),
+                    date: formData.get('date'), // Keep as YYYY-MM-DD format
                     type: formData.get('category'),
                     description: formData.get('description'),
                     paidBy: formData.get('paidBy'),
@@ -291,6 +472,7 @@
         function resetForm() {
             document.getElementById('expenseForm').reset();
             document.getElementById('date').value = augustDate;
+            document.getElementById('autoCategory').style.display = 'none';
         }
 
         // Auto-focus on description field for better UX

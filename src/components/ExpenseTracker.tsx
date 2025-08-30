@@ -23,12 +23,12 @@ import {
   Chip
 } from '@mui/material';
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { ExpenseEntry, ExpenseCategory } from '../types';
 
 interface ExpenseTrackerProps {
   expenses: ExpenseEntry[];
-  setExpenses: React.Dispatch<React.SetStateAction<ExpenseEntry[]>>;
+  setExpenses: (expenses: ExpenseEntry[]) => void;
   categories: ExpenseCategory[];
 }
 
@@ -86,16 +86,19 @@ const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({ expenses, setExpenses, 
     };
 
     if (editingExpense) {
-      setExpenses(expenses.map(exp => exp.id === editingExpense.id ? newExpense : exp));
+      const updatedExpenses = expenses.map(exp => exp.id === editingExpense.id ? newExpense : exp);
+      setExpenses(updatedExpenses);
     } else {
-      setExpenses([...expenses, newExpense]);
+      const updatedExpenses = [...expenses, newExpense];
+      setExpenses(updatedExpenses);
     }
 
     handleCloseDialog();
   };
 
   const handleDelete = (id: string) => {
-    setExpenses(expenses.filter(exp => exp.id !== id));
+    const updatedExpenses = expenses.filter(exp => exp.id !== id);
+    setExpenses(updatedExpenses);
   };
 
   const totalAmount = expenses.reduce((sum, expense) => sum + expense.amount, 0);
@@ -201,7 +204,7 @@ const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({ expenses, setExpenses, 
                 minWidth: 250, '&:hover': { backgroundColor: '#f8f9fa' } }}>
                   <TableCell sx={{
                 minWidth: 250, fontWeight: 500 }}>
-                    {format(new Date(expense.date), 'dd-MMM')}
+                    {format(parseISO(expense.date), 'dd-MMM')}
                   </TableCell>
                   <TableCell>
                     <Chip 

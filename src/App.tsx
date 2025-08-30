@@ -4,23 +4,25 @@ import Navigation from './components/Navigation';
 import Dashboard from './components/Dashboard';
 import ExpenseTracker from './components/ExpenseTracker';
 import BudgetManager from './components/BudgetManager';
+import FinancialGoals from './components/FinancialGoals';
+import BillManager from './components/BillManager';
 import DataUpload from './components/DataUpload';
-import { ExpenseEntry, ExpenseCategory } from './types';
-import { expenseCategories, allExpenses } from './data/sampleData';
+import { ExpenseEntry, ExpenseCategory, FinancialGoal, Bill, Investment } from './types';
+import { expenseCategories, allExpenses, allIncome, allInvestments } from './data/sampleData';
 import { logDataValidation } from './utils/dataValidation';
 
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#1a237e', // Navy blue
-      light: '#534bae',
-      dark: '#000051',
+      main: '#2c3e50', // Softer dark blue
+      light: '#3498db',
+      dark: '#1a252f',
       contrastText: '#ffffff',
     },
     secondary: {
-      main: '#ff6f00', // Orange accent
-      light: '#ffa040',
-      dark: '#c43e00',
+      main: '#e74c3c', // Softer red
+      light: '#ff6b6b',
+      dark: '#c0392b',
       contrastText: '#ffffff',
     },
     background: {
@@ -28,34 +30,34 @@ const theme = createTheme({
       paper: '#ffffff',
     },
     text: {
-      primary: '#1a237e',
-      secondary: '#546e7a',
+      primary: '#2c3e50',
+      secondary: '#7f8c8d',
     },
   },
   typography: {
     fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
     h1: {
-      color: '#1a237e',
+      color: '#2c3e50',
       fontWeight: 600,
     },
     h2: {
-      color: '#1a237e',
+      color: '#2c3e50',
       fontWeight: 600,
     },
     h3: {
-      color: '#1a237e',
+      color: '#2c3e50',
       fontWeight: 600,
     },
     h4: {
-      color: '#1a237e',
+      color: '#2c3e50',
       fontWeight: 600,
     },
     h5: {
-      color: '#1a237e',
+      color: '#2c3e50',
       fontWeight: 600,
     },
     h6: {
-      color: '#1a237e',
+      color: '#2c3e50',
       fontWeight: 600,
     },
   },
@@ -63,24 +65,26 @@ const theme = createTheme({
     MuiCard: {
       styleOverrides: {
         root: {
-          boxShadow: '0 2px 8px rgba(26, 35, 126, 0.1)',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
           borderRadius: 12,
+          border: '1px solid #ecf0f1',
         },
       },
     },
     MuiPaper: {
       styleOverrides: {
         root: {
-          boxShadow: '0 2px 8px rgba(26, 35, 126, 0.1)',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
           borderRadius: 12,
+          border: '1px solid #ecf0f1',
         },
       },
     },
     MuiAppBar: {
       styleOverrides: {
         root: {
-          backgroundColor: '#1a237e',
-          boxShadow: '0 2px 8px rgba(26, 35, 126, 0.2)',
+          backgroundColor: '#2c3e50',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
         },
       },
     },
@@ -128,6 +132,68 @@ function App() {
   
   const [categories, setCategories] = useState<ExpenseCategory[]>(expenseCategories);
 
+  // Financial Goals state management
+  const [goals, setGoals] = useState<FinancialGoal[]>(() => {
+    try {
+      const saved = localStorage.getItem('financialGoals');
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (error) {
+      console.error('Error loading goals from localStorage:', error);
+    }
+    return [];
+  });
+
+  // Bills state management
+  const [bills, setBills] = useState<Bill[]>(() => {
+    try {
+      const saved = localStorage.getItem('bills');
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (error) {
+      console.error('Error loading bills from localStorage:', error);
+    }
+    return [];
+  });
+
+  // Income state management
+  const [income, setIncome] = useState<ExpenseEntry[]>(() => {
+    try {
+      const saved = localStorage.getItem('income');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        console.log('Loaded income from localStorage:', parsed.length);
+        return parsed;
+      }
+    } catch (error) {
+      console.error('Error loading income from localStorage:', error);
+    }
+    
+    console.log('Using default income:', allIncome.length);
+    localStorage.setItem('income', JSON.stringify(allIncome));
+    return allIncome;
+  });
+
+  // Investment state management
+  const [investments, setInvestments] = useState<Investment[]>(() => {
+    try {
+      const saved = localStorage.getItem('investments');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        console.log('Loaded investments from localStorage:', parsed.length);
+        return parsed;
+      }
+    } catch (error) {
+      console.error('Error loading investments from localStorage:', error);
+    }
+    
+    console.log('Using default investments:', allInvestments.length);
+    localStorage.setItem('investments', JSON.stringify(allInvestments));
+    return allInvestments;
+  });
+
   // Robust expense update function
   const updateExpenses = useCallback((newExpenses: ExpenseEntry[]) => {
     console.log('Updating expenses:', newExpenses.length);
@@ -147,27 +213,43 @@ function App() {
     }
   }, [categories]);
 
-  // Add single expense function
-  const addExpense = useCallback((expense: ExpenseEntry) => {
-    console.log('Adding expense:', expense);
-    updateExpenses([...expenses, expense]);
-  }, [expenses, updateExpenses]);
 
-  // Update expense function
-  const updateExpense = useCallback((updatedExpense: ExpenseEntry) => {
-    console.log('Updating expense:', updatedExpense);
-    const newExpenses = expenses.map(exp => 
-      exp.id === updatedExpense.id ? updatedExpense : exp
-    );
-    updateExpenses(newExpenses);
-  }, [expenses, updateExpenses]);
 
-  // Delete expense function
-  const deleteExpense = useCallback((expenseId: string) => {
-    console.log('Deleting expense:', expenseId);
-    const newExpenses = expenses.filter(exp => exp.id !== expenseId);
-    updateExpenses(newExpenses);
-  }, [expenses, updateExpenses]);
+  // Save goals to localStorage when they change
+  useEffect(() => {
+    try {
+      localStorage.setItem('financialGoals', JSON.stringify(goals));
+    } catch (error) {
+      console.error('Error saving goals to localStorage:', error);
+    }
+  }, [goals]);
+
+  // Save bills to localStorage when they change
+  useEffect(() => {
+    try {
+      localStorage.setItem('bills', JSON.stringify(bills));
+    } catch (error) {
+      console.error('Error saving bills to localStorage:', error);
+    }
+  }, [bills]);
+
+  // Save income to localStorage when it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem('income', JSON.stringify(income));
+    } catch (error) {
+      console.error('Error saving income to localStorage:', error);
+    }
+  }, [income]);
+
+  // Save investments to localStorage when they change
+  useEffect(() => {
+    try {
+      localStorage.setItem('investments', JSON.stringify(investments));
+    } catch (error) {
+      console.error('Error saving investments to localStorage:', error);
+    }
+  }, [investments]);
 
   // Refresh function for Dashboard
   const refreshData = useCallback(() => {
@@ -191,8 +273,13 @@ function App() {
         const saved = localStorage.getItem('expenses');
         if (saved) {
           const parsed = JSON.parse(saved);
-          // Only update if we have more expenses (new additions)
-          if (parsed.length > expenses.length) {
+          // Only update if we have more expenses (new additions) or if the data is different
+          const currentIds = new Set(expenses.map((exp: ExpenseEntry) => exp.id));
+          
+          // Check if there are new expenses (additions)
+          const hasNewExpenses = parsed.some((exp: ExpenseEntry) => !currentIds.has(exp.id));
+          
+          if (hasNewExpenses) {
             console.log('Auto-refresh: detected new expenses in localStorage');
             setExpenses(parsed);
           }
@@ -203,7 +290,7 @@ function App() {
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [expenses.length]);
+  }, [expenses]);
 
   // Listen for storage events (cross-tab sync)
   useEffect(() => {
@@ -251,13 +338,17 @@ function App() {
             selectedMonth={selectedMonth} 
             setSelectedMonth={setSelectedMonth} 
             onRefresh={refreshData}
+            goals={goals}
+            bills={bills}
+            incomeData={income}
+            investments={investments}
           />
         );
       case 1:
         return (
           <ExpenseTracker 
             expenses={expenses} 
-            setExpenses={setExpenses} 
+            setExpenses={updateExpenses} 
             categories={categories} 
           />
         );
@@ -272,6 +363,20 @@ function App() {
         );
       case 3:
         return (
+          <FinancialGoals 
+            goals={goals} 
+            setGoals={setGoals} 
+          />
+        );
+      case 4:
+        return (
+          <BillManager 
+            bills={bills} 
+            setBills={setBills} 
+          />
+        );
+      case 5:
+        return (
           <DataUpload 
             onDataUpload={handleDataUpload} 
             existingExpenses={expenses} 
@@ -285,6 +390,10 @@ function App() {
             selectedMonth={selectedMonth} 
             setSelectedMonth={setSelectedMonth} 
             onRefresh={refreshData}
+            goals={goals}
+            bills={bills}
+            incomeData={income}
+            investments={investments}
           />
         );
     }

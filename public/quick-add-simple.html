@@ -192,7 +192,7 @@
                 
                 const expense = {
                     id: Date.now().toString(),
-                    date: formData.get('date'),
+                    date: formData.get('date'), // Keep as YYYY-MM-DD format
                     type: formData.get('category'),
                     description: formData.get('description'),
                     paidBy: formData.get('paidBy'),

@@ -4,17 +4,12 @@ import {
   Paper,
   Typography,
   TextField,
-  Button,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   IconButton,
   Chip,
   LinearProgress,
@@ -23,6 +18,7 @@ import {
   CardContent
 } from '@mui/material';
 import { Edit as EditIcon, Save as SaveIcon, Cancel as CancelIcon } from '@mui/icons-material';
+import { format, parseISO } from 'date-fns';
 import { ExpenseCategory, ExpenseEntry } from '../types';
 
 interface BudgetManagerProps {
@@ -70,7 +66,7 @@ const BudgetManager: React.FC<BudgetManagerProps> = ({ expenses, categories, set
   // Filter expenses for the selected month
   const filteredExpenses = useMemo(() => {
     return expenses.filter(expense => {
-      const expenseDate = new Date(expense.date);
+              const expenseDate = parseISO(expense.date);
       const expenseYear = expenseDate.getFullYear();
       const expenseMonth = (expenseDate.getMonth() + 1).toString().padStart(2, '0');
       const expenseYearMonth = `${expenseYear}-${expenseMonth}`;

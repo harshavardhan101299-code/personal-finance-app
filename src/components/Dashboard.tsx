@@ -17,12 +17,28 @@ import {
   InputLabel,
   LinearProgress,
   IconButton,
-  Tooltip
+  Tooltip,
+  Avatar,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemAvatar,
+  Divider,
+  Container
 } from '@mui/material';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
-import { format } from 'date-fns';
-import { ExpenseEntry, ExpenseCategory, BudgetStatus } from '../types';
-import RefreshIcon from '@mui/icons-material/Refresh';
+import { 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, 
+  ResponsiveContainer, PieChart, Pie, Cell
+} from 'recharts';
+import { 
+  Refresh as RefreshIcon, 
+  TrendingUp as TrendingUpIcon,
+  TrendingDown as TrendingDownIcon,
+  AccountBalance as AccountBalanceIcon,
+  Schedule as ScheduleIcon
+} from '@mui/icons-material';
+import { format, parseISO, isAfter, addDays } from 'date-fns';
+import { ExpenseEntry, ExpenseCategory, FinancialGoal, Bill, DashboardMetrics, Investment } from '../types';
 
 interface DashboardProps {
   expenses: ExpenseEntry[];
@@ -30,81 +46,125 @@ interface DashboardProps {
   selectedMonth: string;
   setSelectedMonth: React.Dispatch<React.SetStateAction<string>>;
   onRefresh?: () => void;
+  goals?: FinancialGoal[];
+  bills?: Bill[];
+  incomeData?: ExpenseEntry[];
+  investments?: Investment[];
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ expenses, categories, selectedMonth, setSelectedMonth, onRefresh }) => {
+const Dashboard: React.FC<DashboardProps> = ({ 
+  expenses, 
+  categories, 
+  selectedMonth, 
+  setSelectedMonth, 
+  onRefresh,
+  goals = [],
+  bills = [],
+  incomeData = [],
+  investments = []
+}) => {
 
-  // Debug logging for data analysis
-  console.log('Dashboard received expenses:', expenses.length);
-  console.log('Selected month:', selectedMonth);
-  console.log('All expenses dates:', expenses.map(exp => exp.date).slice(0, 10));
-
-  // Simple expense filtering by month (clean data format)
+  // Enhanced expense filtering with income/expense separation
   const filteredExpenses = useMemo(() => {
-    console.log('=== FILTERING EXPENSES ===');
-    console.log('Total expenses to filter:', expenses.length);
-    console.log('Selected month:', selectedMonth);
-    
     const filtered = expenses.filter(expense => {
-      // Simple YYYY-MM-DD format parsing
-      const expenseYearMonth = expense.date.substring(0, 7); // Get YYYY-MM part
-      const matches = expenseYearMonth === selectedMonth;
-      
-      console.log(`Expense: ${expense.date} -> ${expenseYearMonth}, matches ${selectedMonth}: ${matches}`);
-      
-      return matches;
+      const expenseYearMonth = expense.date.substring(0, 7);
+      return expenseYearMonth === selectedMonth;
     });
-    
-    console.log('Filtered expenses count:', filtered.length);
-    console.log('Filtered expenses:', filtered.map(exp => `${exp.date}: ${exp.type} - ₹${exp.amount}`));
     
     return filtered;
   }, [expenses, selectedMonth]);
 
-  // Calculate monthly expenses by category with detailed logging
-  const monthlyExpenses = useMemo(() => {
-    console.log('=== CALCULATING MONTHLY EXPENSES ===');
+  // Filter income data by selected month
+  const filteredIncome = useMemo(() => {
+    const filtered = incomeData.filter(income => {
+      const incomeYearMonth = income.date.substring(0, 7);
+      return incomeYearMonth === selectedMonth;
+    });
     
-    const expensesByCategory = filteredExpenses.reduce((acc, expense) => {
+    return filtered;
+  }, [incomeData, selectedMonth]);
+
+  // Separate income and expenses
+  const { expenses: monthlyExpenses } = useMemo(() => {
+    // Use the separate income data and treat all filtered expenses as expenses
+    const expenses = filteredExpenses.filter(exp => exp.type !== 'Income');
+    return { expenses };
+  }, [filteredExpenses]);
+
+  // Calculate enhanced metrics
+  const metrics: DashboardMetrics = useMemo(() => {
+    const totalIncome = filteredIncome.reduce((sum, exp) => sum + Math.abs(exp.amount), 0);
+    const totalExpenses = monthlyExpenses.reduce((sum, exp) => sum + Math.abs(exp.amount), 0);
+    const netSavings = totalIncome - totalExpenses;
+    
+    // Calculate budget utilization
+    const totalBudget = categories
+      .filter(cat => cat.budget !== null)
+      .reduce((sum, cat) => sum + (cat.budget || 0), 0);
+    const budgetUtilization = totalBudget > 0 ? (totalExpenses / totalBudget) * 100 : 0;
+    
+    // Top spending categories
+    const categorySpending = monthlyExpenses.reduce((acc, exp) => {
+      acc[exp.type] = (acc[exp.type] || 0) + Math.abs(exp.amount);
+      return acc;
+    }, {} as Record<string, number>);
+    
+    const topSpendingCategories = Object.entries(categorySpending)
+      .map(([category, amount]) => ({ category, amount }))
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 5);
+    
+    // Recent transactions (last 5)
+    const recentTransactions = [...filteredExpenses]
+              .sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime())
+      .slice(0, 5);
+    
+    // Upcoming bills (next 7 days)
+    const upcomingBills = bills.filter(bill => {
+      const dueDate = parseISO(bill.dueDate);
+      const today = new Date();
+      const nextWeek = addDays(today, 7);
+      return bill.status === 'pending' && dueDate <= nextWeek && dueDate >= today;
+    });
+    
+    return {
+      totalExpenses,
+      totalIncome,
+      netSavings,
+      budgetUtilization,
+      topSpendingCategories,
+      recentTransactions,
+      upcomingBills,
+      goalProgress: goals
+    };
+  }, [filteredExpenses, filteredIncome, monthlyExpenses, categories, bills, goals]);
+
+  // Enhanced monthly expenses by category
+  const monthlyExpensesByCategory = useMemo(() => {
+    const expensesByCategory = monthlyExpenses.reduce((acc, expense) => {
       const category = expense.type;
-      acc[category] = (acc[category] || 0) + expense.amount;
-      console.log(`Adding ${expense.type}: ₹${expense.amount} (total now: ₹${acc[category]})`);
+      acc[category] = (acc[category] || 0) + Math.abs(expense.amount);
       return acc;
     }, {} as Record<string, number>);
 
-    const result = Object.entries(expensesByCategory)
+    return Object.entries(expensesByCategory)
       .map(([category, amount]) => ({
         category,
-        amount
+        amount,
+        percentage: metrics.totalExpenses > 0 ? (amount / metrics.totalExpenses) * 100 : 0
       }))
       .sort((a, b) => b.amount - a.amount);
+  }, [monthlyExpenses, metrics.totalExpenses]);
 
-    console.log('Monthly expenses by category:', result);
-    return result;
-  }, [filteredExpenses]);
-
-  // Calculate total expenses with verification
-  const totalExpenses = useMemo(() => {
-    const total = filteredExpenses.reduce((sum, expense) => sum + expense.amount, 0);
-    console.log('Total expenses calculated:', total);
-    console.log('Individual amounts:', filteredExpenses.map(exp => exp.amount));
-    return total;
-  }, [filteredExpenses]);
-
-  // Calculate budget status with detailed logging
+  // Calculate budget status with enhanced features
   const budgetStatus = useMemo(() => {
-    console.log('=== CALCULATING BUDGET STATUS ===');
-    console.log('Categories with budgets:', categories.filter(cat => cat.budget !== null).map(cat => cat.name));
-    
     const status = categories
       .filter(category => category.budget !== null)
       .map(category => {
-        const spent = monthlyExpenses.find(exp => exp.category === category.name)?.amount || 0;
+        const spent = monthlyExpensesByCategory.find(exp => exp.category === category.name)?.amount || 0;
         const budget = category.budget!;
         const remaining = budget - spent;
         const percentage = (spent / budget) * 100;
-
-        console.log(`Category: ${category.name}, Budget: ${budget}, Spent: ${spent}, Percentage: ${percentage}%`);
 
         return {
           category: category.name,
@@ -115,9 +175,22 @@ const Dashboard: React.FC<DashboardProps> = ({ expenses, categories, selectedMon
         };
       });
     
-    console.log('Budget status result:', status);
     return status;
-  }, [monthlyExpenses, categories]);
+  }, [monthlyExpensesByCategory, categories]);
+
+  // Generate colors for charts - softer, more eye-friendly colors
+  const COLORS = [
+    '#4A90E2', // Soft blue
+    '#7ED321', // Soft green
+    '#F5A623', // Soft orange
+    '#D0021B', // Soft red
+    '#9013FE', // Soft purple
+    '#50E3C2', // Soft teal
+    '#F8E71C', // Soft yellow
+    '#BD10E0', // Soft magenta
+    '#4A4A4A', // Soft gray
+    '#417505'  // Dark green
+  ];
 
   const months = [
     { value: '2025-01', label: 'January 2025' },
@@ -134,58 +207,52 @@ const Dashboard: React.FC<DashboardProps> = ({ expenses, categories, selectedMon
     { value: '2025-12', label: 'December 2025' },
   ];
 
-  console.log('=== DASHBOARD RENDER SUMMARY ===');
-  console.log('Total expenses:', expenses.length);
-  console.log('Filtered for', selectedMonth, ':', filteredExpenses.length);
-  console.log('Categories with data:', monthlyExpenses.length);
-  console.log('Total amount:', totalExpenses);
-
   return (
-    <Box sx={{ width: '100%', py: 4, px: { xs: 2, sm: 3, md: 4 } }}>
-      {/* Enhanced Debug Info */}
-      <Paper sx={{ p: 2, mb: 3, backgroundColor: '#fff3e0' }}>
-        <Typography variant="body2" color="text.secondary">
-          <strong>Debug Info:</strong> Total expenses: {expenses.length} | 
-          Filtered for {selectedMonth}: {filteredExpenses.length} | 
-          Categories with data: {monthlyExpenses.length} | 
-          Total amount: ₹{totalExpenses.toLocaleString()}
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-          <strong>August Expenses:</strong> {filteredExpenses.map(exp => `${exp.type}: ₹${exp.amount}`).join(', ')}
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-          <strong>Expected Categories:</strong> Dining, Groceries, Personal Care, Subscriptions, Miscellaneous
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-          <strong>Expected Total:</strong> ₹42,831.46 (Dining: ₹6,426.02, Groceries: ₹1,188, Personal Care: ₹2,618, Subscriptions: ₹75, Miscellaneous: ₹32,524.44)
-        </Typography>
-      </Paper>
-
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+    <Container maxWidth="xl" sx={{ py: 4 }}>
+      {/* Header with enhanced metrics */}
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        mb: 4,
+        flexWrap: { xs: 'wrap', sm: 'nowrap' },
+        gap: 2
+      }}>
         <Typography 
           variant="h3" 
           component="h1" 
           gutterBottom 
-          align="center" 
           sx={{ 
             fontWeight: 700,
-            color: '#1a237e',
-            fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' }
+            color: '#2c3e50',
+            fontSize: { xs: '1.75rem', sm: '2.25rem', md: '2.75rem' },
+            textAlign: { xs: 'center', sm: 'left' }
           }}
         >
-          Harsha's Expenses
+          Financial Dashboard
         </Typography>
         <Tooltip title="Refresh Data">
-          <IconButton onClick={onRefresh}>
-            <RefreshIcon sx={{ color: '#1a237e' }} />
+          <IconButton 
+            onClick={onRefresh}
+            sx={{ 
+              bgcolor: '#ecf0f1',
+              '&:hover': { bgcolor: '#d5dbdb' }
+            }}
+          >
+            <RefreshIcon sx={{ color: '#2c3e50' }} />
           </IconButton>
         </Tooltip>
       </Box>
 
-      {/* Month Selection */}
-      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'center' }}>
-        <FormControl sx={{ minWidth: 200 }}>
-          <InputLabel>Select Month</InputLabel>
+      {/* Month Selection - Centered */}
+      <Box sx={{ 
+        mb: 4, 
+        display: 'flex', 
+        justifyContent: 'center',
+        width: '100%'
+      }}>
+        <FormControl sx={{ minWidth: 250 }}>
+          <InputLabel sx={{ color: '#2c3e50' }}>Select Month</InputLabel>
           <Select
             value={selectedMonth}
             label="Select Month"
@@ -193,12 +260,16 @@ const Dashboard: React.FC<DashboardProps> = ({ expenses, categories, selectedMon
             sx={{
               '& .MuiOutlinedInput-root': {
                 '&:hover fieldset': {
-                  borderColor: '#1a237e',
+                  borderColor: '#3498db',
                 },
                 '&.Mui-focused fieldset': {
-                  borderColor: '#1a237e',
+                  borderColor: '#3498db',
                 },
               },
+              '& .MuiSelect-select': {
+                color: '#2c3e50',
+                fontWeight: 500
+              }
             }}
           >
             {months.map((month) => (
@@ -210,130 +281,577 @@ const Dashboard: React.FC<DashboardProps> = ({ expenses, categories, selectedMon
         </FormControl>
       </Box>
 
-      {/* Summary Cards */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 3, mb: 4 }}>
-        <Card>
-          <CardContent sx={{ textAlign: 'center' }}>
-            <Typography variant="h6" color="text.secondary" gutterBottom>
-              Total Expenses ({selectedMonth.split('-')[1] === '08' ? 'August' : 'Selected Month'})
+      {/* Enhanced Summary Cards */}
+      <Box sx={{ 
+        display: 'grid', 
+        gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, 
+        gap: 3, 
+        mb: 4 
+      }}>
+        <Card sx={{ 
+          background: 'linear-gradient(135deg, #3498db 0%, #2980b9 100%)',
+          color: 'white',
+          height: '100%',
+          transition: 'transform 0.2s ease-in-out',
+          '&:hover': {
+            transform: 'translateY(-4px)',
+            boxShadow: '0 8px 25px rgba(52, 152, 219, 0.3)'
+          }
+        }}>
+          <CardContent sx={{ textAlign: 'center', p: 3 }}>
+            <AccountBalanceIcon sx={{ fontSize: 40, mb: 2, opacity: 0.9 }} />
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, opacity: 0.9 }}>
+              Total Income
             </Typography>
-            <Typography variant="h4" sx={{ fontWeight: 700, color: '#1a237e' }}>
-              ₹{totalExpenses.toLocaleString()}
+            <Typography variant="h4" sx={{ fontWeight: 700, color: '#ecf0f1' }}>
+              ₹{metrics.totalIncome.toLocaleString()}
             </Typography>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent sx={{ textAlign: 'center' }}>
-            <Typography variant="h6" color="text.secondary" gutterBottom>
-              Total Budget
+        <Card sx={{ 
+          background: 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)',
+          color: 'white',
+          height: '100%',
+          transition: 'transform 0.2s ease-in-out',
+          '&:hover': {
+            transform: 'translateY(-4px)',
+            boxShadow: '0 8px 25px rgba(231, 76, 60, 0.3)'
+          }
+        }}>
+          <CardContent sx={{ textAlign: 'center', p: 3 }}>
+            <TrendingDownIcon sx={{ fontSize: 40, mb: 2, opacity: 0.9 }} />
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, opacity: 0.9 }}>
+              Total Expenses
             </Typography>
-            <Typography variant="h4" sx={{ fontWeight: 700, color: '#1a237e' }}>
-              ₹21,500
+            <Typography variant="h4" sx={{ fontWeight: 700, color: '#ecf0f1' }}>
+              ₹{metrics.totalExpenses.toLocaleString()}
             </Typography>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent sx={{ textAlign: 'center' }}>
-            <Typography variant="h6" color="text.secondary" gutterBottom>
-              Number of Transactions
+        <Card sx={{ 
+          background: 'linear-gradient(135deg, #27ae60 0%, #229954 100%)',
+          color: 'white',
+          height: '100%',
+          transition: 'transform 0.2s ease-in-out',
+          '&:hover': {
+            transform: 'translateY(-4px)',
+            boxShadow: '0 8px 25px rgba(39, 174, 96, 0.3)'
+          }
+        }}>
+          <CardContent sx={{ textAlign: 'center', p: 3 }}>
+            <TrendingUpIcon sx={{ fontSize: 40, mb: 2, opacity: 0.9 }} />
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, opacity: 0.9 }}>
+              Net Savings
             </Typography>
-            <Typography variant="h4" sx={{ fontWeight: 700, color: '#1a237e' }}>
-              {filteredExpenses.length}
+            <Typography variant="h4" sx={{ fontWeight: 700, color: '#ecf0f1' }}>
+              ₹{metrics.netSavings.toLocaleString()}
             </Typography>
+          </CardContent>
+        </Card>
+
+        <Card sx={{ 
+          background: 'linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%)',
+          color: 'white',
+          height: '100%',
+          transition: 'transform 0.2s ease-in-out',
+          '&:hover': {
+            transform: 'translateY(-4px)',
+            boxShadow: '0 8px 25px rgba(155, 89, 182, 0.3)'
+          }
+        }}>
+          <CardContent sx={{ textAlign: 'center', p: 3 }}>
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, opacity: 0.9 }}>
+              Budget Used
+            </Typography>
+            <Typography variant="h4" sx={{ fontWeight: 700, color: '#ecf0f1', mb: 2 }}>
+              {metrics.budgetUtilization.toFixed(1)}%
+            </Typography>
+            <LinearProgress 
+              variant="determinate" 
+              value={Math.min(metrics.budgetUtilization, 100)}
+              sx={{ 
+                height: 8, 
+                borderRadius: 4,
+                backgroundColor: 'rgba(255,255,255,0.3)',
+                '& .MuiLinearProgress-bar': {
+                  backgroundColor: '#ecf0f1',
+                  borderRadius: 4,
+                }
+              }}
+            />
           </CardContent>
         </Card>
       </Box>
 
-      {/* Charts and Budget Status */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' }, gap: 4 }}>
-        {/* Monthly Expenses Chart */}
-        <Paper sx={{ p: 3 }}>
-          <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, color: '#1a237e', mb: 3 }}>
-            Monthly Expenses by Category
+      {/* Main Content Grid - 3x1 Layout for first row */}
+      <Box sx={{ 
+        display: 'grid', 
+        gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, 
+        gap: 3,
+        mb: 3
+      }}>
+        {/* Expense Categories Chart */}
+        <Paper sx={{ 
+          p: 3, 
+          height: 500,
+          borderRadius: 3,
+          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+          border: '1px solid #ecf0f1'
+        }}>
+          <Typography variant="h6" gutterBottom sx={{ 
+            fontWeight: 600, 
+            color: '#2c3e50', 
+            mb: 3,
+            fontSize: '1.1rem'
+          }}>
+            Expense Categories
           </Typography>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={monthlyExpenses}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="category" 
-                angle={-45}
-                textAnchor="end"
-                height={80}
-                tick={{ fontSize: 12 }}
-              />
-              <YAxis />
-              <RechartsTooltip 
-                formatter={(value) => [`₹${value}`, 'Amount']}
-                labelStyle={{ color: '#1a237e' }}
-              />
-              <Bar dataKey="amount" fill="#1a237e" />
-            </BarChart>
-          </ResponsiveContainer>
-        </Paper>
-
-        {/* Budget Status */}
-        <Paper sx={{ p: 3 }}>
-          <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, color: '#1a237e', mb: 3 }}>
-            Budget Status
-          </Typography>
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell sx={{ fontWeight: 600, color: '#1a237e' }}>Category</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 600, color: '#1a237e' }}>Budget</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 600, color: '#1a237e' }}>Spent</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 600, color: '#1a237e' }}>Remaining</TableCell>
-                  <TableCell sx={{ fontWeight: 600, color: '#1a237e' }}>Progress</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {budgetStatus.map((status) => (
-                  <TableRow key={status.category}>
-                    <TableCell sx={{ fontWeight: 500 }}>{status.category}</TableCell>
-                    <TableCell align="right">₹{status.budget.toLocaleString()}</TableCell>
-                    <TableCell align="right">₹{status.spent.toLocaleString()}</TableCell>
-                    <TableCell 
-                      align="right" 
-                      sx={{ 
-                        color: status.remaining >= 0 ? '#2e7d32' : '#d32f2f',
-                        fontWeight: 600
-                      }}
+          {monthlyExpensesByCategory.length > 0 ? (
+            <Box sx={{ display: 'flex', alignItems: 'center', height: 400 }}>
+              <Box sx={{ flex: 1, height: '100%' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={monthlyExpensesByCategory}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      outerRadius={80}
+                      innerRadius={40}
+                      fill="#8884d8"
+                      dataKey="amount"
+                      paddingAngle={2}
                     >
-                      ₹{status.remaining.toLocaleString()}
-                    </TableCell>
-                    <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Box sx={{ flexGrow: 1 }}>
-                          <LinearProgress 
-                            variant="determinate" 
-                            value={Math.min(status.percentage, 100)} 
-                            sx={{
-                              height: 8,
-                              borderRadius: 4,
-                              backgroundColor: '#e0e0e0',
-                              '& .MuiLinearProgress-bar': {
-                                backgroundColor: status.percentage > 100 ? '#d32f2f' : '#1a237e',
-                                borderRadius: 4,
-                              }
-                            }}
-                          />
-                        </Box>
-                        <Typography variant="body2" sx={{ minWidth: 45, fontWeight: 600 }}>
-                          {status.percentage.toFixed(1)}%
-                        </Typography>
-                      </Box>
-                    </TableCell>
-                  </TableRow>
+                      {monthlyExpensesByCategory.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <RechartsTooltip 
+                      formatter={(value, name, props) => [
+                        `₹${value.toLocaleString()}`, 
+                        props.payload.category
+                      ]}
+                      labelStyle={{ color: '#2c3e50', fontWeight: 'bold' }}
+                      contentStyle={{ 
+                        backgroundColor: '#ffffff',
+                        border: '1px solid #e0e0e0',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </Box>
+              {/* Legend */}
+              <Box sx={{ 
+                ml: 2, 
+                minWidth: 120,
+                maxHeight: 400,
+                overflow: 'auto'
+              }}>
+                <Typography variant="subtitle2" sx={{ 
+                  fontWeight: 600, 
+                  color: '#2c3e50', 
+                  mb: 2,
+                  fontSize: '0.9rem'
+                }}>
+                  Categories
+                </Typography>
+                {monthlyExpensesByCategory.map((entry, index) => (
+                  <Box key={entry.category} sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    mb: 1,
+                    p: 0.5,
+                    borderRadius: 1,
+                    '&:hover': { backgroundColor: '#f8f9fa' }
+                  }}>
+                    <Box sx={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: '50%',
+                      backgroundColor: COLORS[index % COLORS.length],
+                      mr: 1
+                    }} />
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Typography variant="body2" sx={{ 
+                        fontWeight: 500, 
+                        color: '#2c3e50',
+                        fontSize: '0.75rem',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                      }}>
+                        {entry.category}
+                      </Typography>
+                      <Typography variant="caption" sx={{ 
+                        color: '#7f8c8d',
+                        fontSize: '0.65rem'
+                      }}>
+                        ₹{entry.amount.toLocaleString()} ({entry.percentage.toFixed(1)}%)
+                      </Typography>
+                    </Box>
+                  </Box>
                 ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+              </Box>
+            </Box>
+          ) : (
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              height: 400,
+              color: '#7f8c8d',
+              fontSize: '1.1rem'
+            }}>
+              No expense data available
+            </Box>
+          )}
+        </Paper>
+
+        {/* Monthly Overview Chart */}
+        <Paper sx={{ 
+          p: 3, 
+          height: 500,
+          borderRadius: 3,
+          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+          border: '1px solid #ecf0f1'
+        }}>
+          <Typography variant="h6" gutterBottom sx={{ 
+            fontWeight: 600, 
+            color: '#2c3e50', 
+            mb: 3,
+            fontSize: '1.1rem'
+          }}>
+            Monthly Overview
+          </Typography>
+          {monthlyExpensesByCategory.length > 0 ? (
+            <ResponsiveContainer width="100%" height={400}>
+              <BarChart data={[
+                { name: 'Income', amount: metrics.totalIncome, color: '#2ECC71' },
+                { name: 'Expenses', amount: metrics.totalExpenses, color: '#E74C3C' }
+              ]}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#ecf0f1" />
+                <XAxis 
+                  dataKey="name" 
+                  tick={{ fontSize: 12, fill: '#2c3e50', fontWeight: 600 }}
+                />
+                <YAxis 
+                  tick={{ fill: '#2c3e50', fontSize: 11 }}
+                  tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}k`}
+                />
+                <RechartsTooltip 
+                  formatter={(value, name, props) => [
+                    `₹${value.toLocaleString()}`, 
+                    props.payload.name
+                  ]}
+                  labelStyle={{ color: '#2c3e50', fontWeight: 'bold' }}
+                  contentStyle={{ 
+                    backgroundColor: '#ffffff',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+                  }}
+                />
+                <Bar 
+                  dataKey="amount" 
+                  fill="#3498db"
+                  radius={[4, 4, 0, 0]}
+                  name="Amount"
+                >
+                  {[
+                    { name: 'Income', amount: metrics.totalIncome, color: '#2ECC71' },
+                    { name: 'Expenses', amount: metrics.totalExpenses, color: '#E74C3C' }
+                  ].map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              height: 400,
+              color: '#7f8c8d',
+              fontSize: '1.1rem'
+            }}>
+              No expense data available
+            </Box>
+          )}
+        </Paper>
+
+        {/* Recent Transactions */}
+        <Paper sx={{ 
+          p: 3,
+          borderRadius: 3,
+          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+          border: '1px solid #ecf0f1'
+        }}>
+          <Typography variant="h6" gutterBottom sx={{ 
+            fontWeight: 600, 
+            color: '#2c3e50', 
+            mb: 2,
+            fontSize: '1.1rem'
+          }}>
+            Recent Transactions
+          </Typography>
+          <List sx={{ maxHeight: 400, overflow: 'auto' }}>
+            {metrics.recentTransactions.length > 0 ? (
+              metrics.recentTransactions.map((transaction, index) => (
+                <React.Fragment key={transaction.id}>
+                  <ListItem sx={{ px: 0, py: 0.5 }}>
+                    <ListItemAvatar>
+                      <Avatar sx={{ 
+                        bgcolor: transaction.amount > 0 ? '#27ae60' : '#e74c3c',
+                        width: 24,
+                        height: 24
+                      }}>
+                        {transaction.amount > 0 ? '+' : '-'}
+                      </Avatar>
+                    </ListItemAvatar>
+                    <ListItemText
+                      primary={transaction.description}
+                      secondary={`${transaction.type} • ${format(parseISO(transaction.date), 'MMM dd')}`}
+                      primaryTypographyProps={{ 
+                        fontSize: '0.8rem', 
+                        fontWeight: 500,
+                        color: '#2c3e50'
+                      }}
+                      secondaryTypographyProps={{ 
+                        fontSize: '0.7rem',
+                        color: '#7f8c8d'
+                      }}
+                    />
+                    <Typography variant="body2" sx={{ 
+                      fontWeight: 600,
+                      color: transaction.amount > 0 ? '#27ae60' : '#e74c3c',
+                      fontSize: '0.8rem'
+                    }}>
+                      ₹{Math.abs(transaction.amount).toLocaleString()}
+                    </Typography>
+                  </ListItem>
+                  {index < metrics.recentTransactions.length - 1 && <Divider />}
+                </React.Fragment>
+              ))
+            ) : (
+              <Box sx={{ 
+                textAlign: 'center', 
+                py: 3,
+                color: '#7f8c8d'
+              }}>
+                No recent transactions
+              </Box>
+            )}
+          </List>
         </Paper>
       </Box>
-    </Box>
+
+      {/* Budget Status Table - Full Width Below */}
+      <Paper sx={{ 
+        p: 3,
+        borderRadius: 3,
+        boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+        border: '1px solid #ecf0f1'
+      }}>
+        <Typography variant="h6" gutterBottom sx={{ 
+          fontWeight: 600, 
+          color: '#2c3e50', 
+          mb: 3,
+          fontSize: '1.1rem'
+        }}>
+          Budget Status
+        </Typography>
+        <TableContainer>
+          <Table size="small">
+            <TableHead>
+              <TableRow sx={{ backgroundColor: '#f8f9fa' }}>
+                <TableCell sx={{ fontWeight: 600, color: '#2c3e50', fontSize: '0.75rem' }}>Category</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 600, color: '#2c3e50', fontSize: '0.75rem' }}>Budget</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 600, color: '#2c3e50', fontSize: '0.75rem' }}>Spent</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 600, color: '#2c3e50', fontSize: '0.75rem' }}>Remaining</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: '#2c3e50', fontSize: '0.75rem' }}>Progress</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {budgetStatus.map((status) => (
+                <TableRow key={status.category} sx={{ '&:hover': { backgroundColor: '#f8f9fa' } }}>
+                  <TableCell sx={{ fontWeight: 500, color: '#2c3e50', fontSize: '0.7rem' }}>{status.category}</TableCell>
+                  <TableCell align="right" sx={{ color: '#2c3e50', fontSize: '0.7rem' }}>₹{status.budget.toLocaleString()}</TableCell>
+                  <TableCell align="right" sx={{ color: '#2c3e50', fontSize: '0.7rem' }}>₹{status.spent.toLocaleString()}</TableCell>
+                  <TableCell 
+                    align="right" 
+                    sx={{ 
+                      color: status.remaining >= 0 ? '#27ae60' : '#e74c3c',
+                      fontWeight: 600,
+                      fontSize: '0.7rem'
+                    }}
+                  >
+                    ₹{status.remaining.toLocaleString()}
+                  </TableCell>
+                  <TableCell>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box sx={{ flexGrow: 1 }}>
+                        <LinearProgress 
+                          variant="determinate" 
+                          value={Math.min(status.percentage, 100)} 
+                          sx={{
+                            height: 6,
+                            borderRadius: 3,
+                            backgroundColor: '#ecf0f1',
+                            '& .MuiLinearProgress-bar': {
+                              backgroundColor: status.percentage > 100 ? '#e74c3c' : '#3498db',
+                              borderRadius: 3,
+                            }
+                          }}
+                        />
+                      </Box>
+                      <Typography variant="body2" sx={{ 
+                        minWidth: 35, 
+                        fontWeight: 600,
+                        color: '#2c3e50',
+                        fontSize: '0.65rem'
+                      }}>
+                        {status.percentage.toFixed(1)}%
+                      </Typography>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Paper>
+
+      {/* Additional widgets for smaller screens or if needed */}
+      {(metrics.upcomingBills.length > 0 || metrics.goalProgress.length > 0) && (
+        <Box sx={{ 
+          display: 'grid', 
+          gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, 
+          gap: 3,
+          mt: 3
+        }}>
+          {/* Upcoming Bills */}
+          {metrics.upcomingBills.length > 0 && (
+            <Paper sx={{ 
+              p: 3,
+              borderRadius: 3,
+              boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+              border: '1px solid #ecf0f1'
+            }}>
+              <Typography variant="h6" gutterBottom sx={{ 
+                fontWeight: 600, 
+                color: '#2c3e50', 
+                mb: 2,
+                fontSize: '1.1rem'
+              }}>
+                Upcoming Bills
+              </Typography>
+              <List sx={{ maxHeight: 200, overflow: 'auto' }}>
+                {metrics.upcomingBills.map((bill, index) => (
+                  <React.Fragment key={bill.id}>
+                    <ListItem sx={{ px: 0 }}>
+                      <ListItemAvatar>
+                        <Avatar sx={{ 
+                          bgcolor: isAfter(parseISO(bill.dueDate), new Date()) ? '#f39c12' : '#e74c3c',
+                          width: 32,
+                          height: 32
+                        }}>
+                          <ScheduleIcon fontSize="small" />
+                        </Avatar>
+                      </ListItemAvatar>
+                      <ListItemText
+                        primary={bill.name}
+                        secondary={`Due: ${format(parseISO(bill.dueDate), 'MMM dd, yyyy')}`}
+                        primaryTypographyProps={{ 
+                          fontSize: '0.9rem', 
+                          fontWeight: 500,
+                          color: '#2c3e50'
+                        }}
+                        secondaryTypographyProps={{ 
+                          fontSize: '0.8rem',
+                          color: '#7f8c8d'
+                        }}
+                      />
+                      <Typography variant="body2" sx={{ 
+                        fontWeight: 600,
+                        color: '#2c3e50'
+                      }}>
+                        ₹{bill.amount.toLocaleString()}
+                      </Typography>
+                    </ListItem>
+                    {index < metrics.upcomingBills.length - 1 && <Divider />}
+                  </React.Fragment>
+                ))}
+              </List>
+            </Paper>
+          )}
+
+          {/* Financial Goals Progress */}
+          {metrics.goalProgress.length > 0 && (
+            <Paper sx={{ 
+              p: 3,
+              borderRadius: 3,
+              boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+              border: '1px solid #ecf0f1'
+            }}>
+              <Typography variant="h6" gutterBottom sx={{ 
+                fontWeight: 600, 
+                color: '#2c3e50', 
+                mb: 2,
+                fontSize: '1.1rem'
+              }}>
+                Goals Progress
+              </Typography>
+              {metrics.goalProgress.map((goal) => {
+                const progress = (goal.currentAmount / goal.targetAmount) * 100;
+                return (
+                  <Box key={goal.id} sx={{ mb: 2 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                      <Typography variant="body2" sx={{ 
+                        fontWeight: 500,
+                        color: '#2c3e50'
+                      }}>
+                        {goal.name}
+                      </Typography>
+                      <Typography variant="body2" sx={{ 
+                        fontWeight: 600,
+                        color: '#2c3e50'
+                      }}>
+                        {progress.toFixed(1)}%
+                      </Typography>
+                    </Box>
+                    <LinearProgress 
+                      variant="determinate" 
+                      value={Math.min(progress, 100)}
+                      sx={{
+                        height: 6,
+                        borderRadius: 3,
+                        backgroundColor: '#ecf0f1',
+                        '& .MuiLinearProgress-bar': {
+                          backgroundColor: progress >= 100 ? '#27ae60' : '#3498db',
+                          borderRadius: 3,
+                        }
+                      }}
+                    />
+                    <Typography variant="caption" sx={{ 
+                      color: '#7f8c8d',
+                      display: 'block',
+                      mt: 0.5
+                    }}>
+                      ₹{goal.currentAmount.toLocaleString()} / ₹{goal.targetAmount.toLocaleString()}
+                    </Typography>
+                  </Box>
+                );
+              })}
+            </Paper>
+          )}
+        </Box>
+      )}
+    </Container>
   );
 };
 

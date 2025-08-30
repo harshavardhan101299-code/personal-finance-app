@@ -1,4 +1,4 @@
-import { ExpenseEntry, ExpenseCategory } from '../types';
+import { ExpenseEntry, ExpenseCategory, Investment } from '../types';
 
 // Clean monthly data from pivot table screenshots (2025)
 export const aprilExpenses: ExpenseEntry[] = [
@@ -45,12 +45,55 @@ export const julyExpenses: ExpenseEntry[] = [
 ];
 
 export const augustExpenses: ExpenseEntry[] = [
-  { id: 'aug-1', date: '2025-08-01', type: 'Dining', description: 'August Dining Expenses', paidBy: 'Me', amount: 6426.02 },
+  { id: 'aug-1', date: '2025-08-01', type: 'Dining', description: 'August Dining Expenses', paidBy: 'Me', amount: 6624.02 },
   { id: 'aug-2', date: '2025-08-01', type: 'Groceries', description: 'August Groceries', paidBy: 'Me', amount: 1449 },
   { id: 'aug-3', date: '2025-08-01', type: 'Learning & Growth', description: 'August Learning & Growth', paidBy: 'Me', amount: 542 },
   { id: 'aug-4', date: '2025-08-01', type: 'Miscellaneous', description: 'August Miscellaneous', paidBy: 'Me', amount: 32524.44 },
   { id: 'aug-5', date: '2025-08-01', type: 'Personal Care', description: 'August Personal Care', paidBy: 'Me', amount: 2618 },
-  { id: 'aug-6', date: '2025-08-01', type: 'Subscriptions', description: 'August Subscriptions', paidBy: 'Me', amount: 241 },
+  { id: 'aug-6', date: '2025-08-01', type: 'Subscriptions', description: 'August Subscriptions', paidBy: 'Me', amount: 606 },
+  { id: 'aug-7', date: '2025-08-01', type: 'Work', description: 'August Work Expenses', paidBy: 'Me', amount: 3000 },
+];
+
+// Income data for 2025
+export const aprilIncome: ExpenseEntry[] = [
+  { id: 'apr-income-1', date: '2025-04-01', type: 'Income', description: 'April Income', paidBy: 'Me', amount: 0 },
+];
+
+export const mayIncome: ExpenseEntry[] = [
+  { id: 'may-income-1', date: '2025-05-01', type: 'Income', description: 'May Income', paidBy: 'Me', amount: 0 },
+];
+
+export const juneIncome: ExpenseEntry[] = [
+  { id: 'jun-income-1', date: '2025-06-01', type: 'Income', description: 'June Income', paidBy: 'Me', amount: 121773 },
+];
+
+export const julyIncome: ExpenseEntry[] = [
+  { id: 'jul-income-1', date: '2025-07-01', type: 'Income', description: 'July Income', paidBy: 'Me', amount: 76568 },
+];
+
+export const augustIncome: ExpenseEntry[] = [
+  { id: 'aug-income-1', date: '2025-08-01', type: 'Income', description: 'August Income', paidBy: 'Me', amount: 76568 },
+];
+
+// Investment data for 2025
+export const aprilInvestments: Investment[] = [
+  { id: 'apr-inv-1', name: 'April Investments', type: 'mutual-funds', amount: 0, currentValue: 0, purchaseDate: '2025-04-01', description: 'April Investment Allocation' },
+];
+
+export const mayInvestments: Investment[] = [
+  { id: 'may-inv-1', name: 'May Investments', type: 'mutual-funds', amount: 0, currentValue: 0, purchaseDate: '2025-05-01', description: 'May Investment Allocation' },
+];
+
+export const juneInvestments: Investment[] = [
+  { id: 'jun-inv-1', name: 'June Investments', type: 'mutual-funds', amount: 35000, currentValue: 35000, purchaseDate: '2025-06-01', description: 'June Investment Allocation' },
+];
+
+export const julyInvestments: Investment[] = [
+  { id: 'jul-inv-1', name: 'July Investments', type: 'mutual-funds', amount: 45000, currentValue: 45000, purchaseDate: '2025-07-01', description: 'July Investment Allocation' },
+];
+
+export const augustInvestments: Investment[] = [
+  { id: 'aug-inv-1', name: 'August Investments', type: 'mutual-funds', amount: 30000, currentValue: 30000, purchaseDate: '2025-08-01', description: 'August Investment Allocation' },
 ];
 
 // Combine all months
@@ -60,6 +103,22 @@ export const allExpenses: ExpenseEntry[] = [
   ...juneExpenses,
   ...julyExpenses,
   ...augustExpenses,
+];
+
+export const allIncome: ExpenseEntry[] = [
+  ...aprilIncome,
+  ...mayIncome,
+  ...juneIncome,
+  ...julyIncome,
+  ...augustIncome,
+];
+
+export const allInvestments: Investment[] = [
+  ...aprilInvestments,
+  ...mayInvestments,
+  ...juneInvestments,
+  ...julyInvestments,
+  ...augustInvestments,
 ];
 
 // Updated categories based on all months
@@ -75,4 +134,5 @@ export const expenseCategories: ExpenseCategory[] = [
   { name: 'Medical', budget: 1000, color: '#BB8FCE' },
   { name: 'Miscellaneous', budget: 5000, color: '#85C1E9' },
   { name: 'Learning & Growth', budget: 500, color: '#F8C471' },
+  { name: 'Income', budget: null, color: '#2ECC71' },
 ];

@@ -1,5 +1,7 @@
 // Clear localStorage to remove old data with paidBy fields
 if (typeof window !== 'undefined') {
   localStorage.removeItem('expenses');
-  console.log('Cleared expenses from localStorage');
+  localStorage.removeItem('income');
+  localStorage.removeItem('investments');
+  console.log('Cleared expenses, income, and investments from localStorage');
 }

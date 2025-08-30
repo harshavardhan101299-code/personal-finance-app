@@ -12,7 +12,9 @@ import {
   Dashboard as DashboardIcon,
   Receipt as ReceiptIcon,
   AccountBalance as BudgetIcon,
-  CloudUpload as UploadIcon
+  CloudUpload as UploadIcon,
+  Flag as GoalsIcon,
+  Payment as BillsIcon
 } from '@mui/icons-material';
 
 interface NavigationProps {
@@ -40,7 +42,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentTab, onTabChange }) => {
               color: 'white'
             }}
           >
-            💰 Harsha's Expenses
+            💰 Harsha's Finance
           </Typography>
           <Tabs 
             value={currentTab} 
@@ -50,7 +52,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentTab, onTabChange }) => {
               '& .MuiTab-root': {
                 color: 'rgba(255, 255, 255, 0.8)',
                 fontWeight: 500,
-                fontSize: { xs: '0.875rem', sm: '1rem' },
+                fontSize: { xs: '0.75rem', sm: '0.875rem' },
                 minHeight: 64,
                 '&.Mui-selected': {
                   color: 'white',
@@ -66,6 +68,8 @@ const Navigation: React.FC<NavigationProps> = ({ currentTab, onTabChange }) => {
                 height: 3,
               }
             }}
+            variant="scrollable"
+            scrollButtons="auto"
           >
             <Tab 
               icon={<DashboardIcon />} 
@@ -79,7 +83,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentTab, onTabChange }) => {
             />
             <Tab 
               icon={<ReceiptIcon />} 
-              label="Expense Tracker" 
+              label="Expenses" 
               iconPosition="start"
               sx={{ 
                 '& .MuiTab-iconWrapper': {
@@ -89,7 +93,27 @@ const Navigation: React.FC<NavigationProps> = ({ currentTab, onTabChange }) => {
             />
             <Tab 
               icon={<BudgetIcon />} 
-              label="Budget Manager" 
+              label="Budget" 
+              iconPosition="start"
+              sx={{ 
+                '& .MuiTab-iconWrapper': {
+                  mr: 1
+                }
+              }}
+            />
+            <Tab 
+              icon={<GoalsIcon />} 
+              label="Goals" 
+              iconPosition="start"
+              sx={{ 
+                '& .MuiTab-iconWrapper': {
+                  mr: 1
+                }
+              }}
+            />
+            <Tab 
+              icon={<BillsIcon />} 
+              label="Bills" 
               iconPosition="start"
               sx={{ 
                 '& .MuiTab-iconWrapper': {
@@ -99,7 +123,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentTab, onTabChange }) => {
             />
             <Tab 
               icon={<UploadIcon />} 
-              label="Data Upload" 
+              label="Upload" 
               iconPosition="start"
               sx={{ 
                 '& .MuiTab-iconWrapper': {
