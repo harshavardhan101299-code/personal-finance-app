@@ -3,12 +3,13 @@ import { ThemeProvider, createTheme, CssBaseline, Box } from '@mui/material';
 import Navigation from './components/Navigation';
 import Dashboard from './components/Dashboard';
 import ExpenseTracker from './components/ExpenseTracker';
+import IncomeTracker from './components/IncomeTracker';
 import BudgetManager from './components/BudgetManager';
 import FinancialGoals from './components/FinancialGoals';
 import BillManager from './components/BillManager';
 import DataUpload from './components/DataUpload';
-import { ExpenseEntry, ExpenseCategory, FinancialGoal, Bill, Investment } from './types';
-import { expenseCategories, allExpenses, allIncome, allInvestments } from './data/sampleData';
+import { ExpenseEntry, ExpenseCategory, FinancialGoal, Bill, Investment, IncomeCategory } from './types';
+import { expenseCategories, allExpenses, allIncome, allInvestments, incomeCategories } from './data/sampleData';
 import { logDataValidation } from './utils/dataValidation';
 
 const theme = createTheme({
@@ -131,6 +132,7 @@ function App() {
   });
   
   const [categories, setCategories] = useState<ExpenseCategory[]>(expenseCategories);
+  const [incomeCategoriesList] = useState<IncomeCategory[]>(incomeCategories);
 
   // Financial Goals state management
   const [goals, setGoals] = useState<FinancialGoal[]>(() => {
@@ -354,6 +356,14 @@ function App() {
         );
       case 2:
         return (
+          <IncomeTracker 
+            income={income} 
+            setIncome={setIncome} 
+            categories={incomeCategoriesList} 
+          />
+        );
+      case 3:
+        return (
           <BudgetManager 
             expenses={expenses} 
             categories={categories} 
@@ -361,21 +371,21 @@ function App() {
             selectedMonth={selectedMonth} 
           />
         );
-      case 3:
+      case 4:
         return (
           <FinancialGoals 
             goals={goals} 
             setGoals={setGoals} 
           />
         );
-      case 4:
+      case 5:
         return (
           <BillManager 
             bills={bills} 
             setBills={setBills} 
           />
         );
-      case 5:
+      case 6:
         return (
           <DataUpload 
             onDataUpload={handleDataUpload} 

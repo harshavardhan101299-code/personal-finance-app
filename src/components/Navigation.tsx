@@ -14,7 +14,8 @@ import {
   AccountBalance as BudgetIcon,
   CloudUpload as UploadIcon,
   Flag as GoalsIcon,
-  Payment as BillsIcon
+  Payment as BillsIcon,
+  TrendingUp as IncomeIcon
 } from '@mui/icons-material';
 
 interface NavigationProps {
@@ -84,6 +85,16 @@ const Navigation: React.FC<NavigationProps> = ({ currentTab, onTabChange }) => {
             <Tab 
               icon={<ReceiptIcon />} 
               label="Expenses" 
+              iconPosition="start"
+              sx={{ 
+                '& .MuiTab-iconWrapper': {
+                  mr: 1
+                }
+              }}
+            />
+            <Tab 
+              icon={<IncomeIcon />} 
+              label="Income" 
               iconPosition="start"
               sx={{ 
                 '& .MuiTab-iconWrapper': {

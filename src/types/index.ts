@@ -7,6 +7,14 @@ export interface ExpenseCategory {
   icon?: string; // Material-UI icon name
 }
 
+export interface IncomeCategory {
+  id?: string;
+  name: string;
+  description?: string;
+  color?: string; // Optional color for UI display
+  icon?: string; // Material-UI icon name
+}
+
 export interface ExpenseEntry {
   id: string;
   date: string;
@@ -17,6 +25,7 @@ export interface ExpenseEntry {
   tags?: string[]; // For better categorization
   receipt?: string; // URL to receipt image
   recurring?: boolean; // For recurring expenses
+  isIncome?: boolean; // Flag to distinguish between income and expenses
 }
 
 export interface MonthlyExpense {

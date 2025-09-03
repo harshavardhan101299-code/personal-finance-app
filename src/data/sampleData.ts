@@ -1,4 +1,4 @@
-import { ExpenseEntry, ExpenseCategory, Investment } from '../types';
+import { ExpenseEntry, ExpenseCategory, Investment, IncomeCategory } from '../types';
 
 // Clean monthly data from pivot table screenshots (2025)
 export const aprilExpenses: ExpenseEntry[] = [
@@ -56,23 +56,23 @@ export const augustExpenses: ExpenseEntry[] = [
 
 // Income data for 2025
 export const aprilIncome: ExpenseEntry[] = [
-  { id: 'apr-income-1', date: '2025-04-01', type: 'Income', description: 'April Income', paidBy: 'Me', amount: 0 },
+  { id: 'apr-income-1', date: '2025-04-01', type: 'Job', description: 'April Salary', paidBy: 'Company', amount: 0, isIncome: true },
 ];
 
 export const mayIncome: ExpenseEntry[] = [
-  { id: 'may-income-1', date: '2025-05-01', type: 'Income', description: 'May Income', paidBy: 'Me', amount: 0 },
+  { id: 'may-income-1', date: '2025-05-01', type: 'Job', description: 'May Salary', paidBy: 'Company', amount: 0, isIncome: true },
 ];
 
 export const juneIncome: ExpenseEntry[] = [
-  { id: 'jun-income-1', date: '2025-06-01', type: 'Income', description: 'June Income', paidBy: 'Me', amount: 121773 },
+  { id: 'jun-income-1', date: '2025-06-01', type: 'Job', description: 'June Salary', paidBy: 'Company', amount: 121773, isIncome: true },
 ];
 
 export const julyIncome: ExpenseEntry[] = [
-  { id: 'jul-income-1', date: '2025-07-01', type: 'Income', description: 'July Income', paidBy: 'Me', amount: 76568 },
+  { id: 'jul-income-1', date: '2025-07-01', type: 'Job', description: 'July Salary', paidBy: 'Company', amount: 76568, isIncome: true },
 ];
 
 export const augustIncome: ExpenseEntry[] = [
-  { id: 'aug-income-1', date: '2025-08-01', type: 'Income', description: 'August Income', paidBy: 'Me', amount: 76568 },
+  { id: 'aug-income-1', date: '2025-08-01', type: 'Job', description: 'August Salary', paidBy: 'Company', amount: 76568, isIncome: true },
 ];
 
 // Investment data for 2025
@@ -134,5 +134,12 @@ export const expenseCategories: ExpenseCategory[] = [
   { name: 'Medical', budget: 1000, color: '#BB8FCE' },
   { name: 'Miscellaneous', budget: 5000, color: '#85C1E9' },
   { name: 'Learning & Growth', budget: 500, color: '#F8C471' },
-  { name: 'Income', budget: null, color: '#2ECC71' },
+];
+
+// Income categories
+export const incomeCategories: IncomeCategory[] = [
+  { name: 'Job', color: '#2ECC71', icon: 'work' },
+  { name: 'Gradvine', color: '#9B59B6', icon: 'school' },
+  { name: 'Family', color: '#E67E22', icon: 'family_restroom' },
+  { name: 'Raithu Bandu', color: '#F1C40F', icon: 'agriculture' },
 ];
