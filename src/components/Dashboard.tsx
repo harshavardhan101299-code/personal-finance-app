@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Box,
   Typography,
@@ -24,7 +24,8 @@ import {
   ListItemText,
   ListItemAvatar,
   Divider,
-  Container
+  Container,
+  Button
 } from '@mui/material';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, 
@@ -35,10 +36,12 @@ import {
   TrendingUp as TrendingUpIcon,
   TrendingDown as TrendingDownIcon,
   AccountBalance as AccountBalanceIcon,
-  Schedule as ScheduleIcon
+  Schedule as ScheduleIcon,
+  Download as DownloadIcon
 } from '@mui/icons-material';
 import { format, parseISO, isAfter, addDays } from 'date-fns';
-import { ExpenseEntry, ExpenseCategory, FinancialGoal, Bill, DashboardMetrics, Investment } from '../types';
+import { ExpenseEntry, ExpenseCategory, FinancialGoal, Bill, DashboardMetrics, Investment, IncomeCategory } from '../types';
+import MonthlyReport from './MonthlyReport';
 
 interface DashboardProps {
   expenses: ExpenseEntry[];
@@ -50,6 +53,7 @@ interface DashboardProps {
   bills?: Bill[];
   incomeData?: ExpenseEntry[];
   investments?: Investment[];
+  incomeCategories?: IncomeCategory[];
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ 
@@ -61,8 +65,10 @@ const Dashboard: React.FC<DashboardProps> = ({
   goals = [],
   bills = [],
   incomeData = [],
-  investments = []
+  investments = [],
+  incomeCategories = []
 }) => {
+  const [reportOpen, setReportOpen] = useState(false);
 
   // Enhanced expense filtering with income/expense separation
   const filteredExpenses = useMemo(() => {
@@ -231,17 +237,31 @@ const Dashboard: React.FC<DashboardProps> = ({
         >
           Financial Dashboard
         </Typography>
-        <Tooltip title="Refresh Data">
-          <IconButton 
-            onClick={onRefresh}
-            sx={{ 
-              bgcolor: '#ecf0f1',
-              '&:hover': { bgcolor: '#d5dbdb' }
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button
+            variant="contained"
+            startIcon={<DownloadIcon />}
+            onClick={() => setReportOpen(true)}
+            sx={{
+              backgroundColor: '#27ae60',
+              '&:hover': { backgroundColor: '#229954' },
+              mr: 1
             }}
           >
-            <RefreshIcon sx={{ color: '#2c3e50' }} />
-          </IconButton>
-        </Tooltip>
+            Export Report
+          </Button>
+          <Tooltip title="Refresh Data">
+            <IconButton 
+              onClick={onRefresh}
+              sx={{ 
+                bgcolor: '#ecf0f1',
+                '&:hover': { bgcolor: '#d5dbdb' }
+              }}
+            >
+              <RefreshIcon sx={{ color: '#2c3e50' }} />
+            </IconButton>
+          </Tooltip>
+        </Box>
       </Box>
 
       {/* Month Selection - Centered */}
@@ -851,6 +871,20 @@ const Dashboard: React.FC<DashboardProps> = ({
           )}
         </Box>
       )}
+
+      {/* Monthly Report Dialog */}
+      <MonthlyReport
+        open={reportOpen}
+        onClose={() => setReportOpen(false)}
+        selectedMonth={selectedMonth}
+        expenses={expenses}
+        income={incomeData}
+        investments={investments}
+        categories={categories}
+        incomeCategories={incomeCategories}
+        goals={goals}
+        bills={bills}
+      />
     </Container>
   );
 };

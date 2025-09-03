@@ -344,6 +344,7 @@ function App() {
             bills={bills}
             incomeData={income}
             investments={investments}
+            incomeCategories={incomeCategoriesList}
           />
         );
       case 1:
@@ -404,6 +405,7 @@ function App() {
             bills={bills}
             incomeData={income}
             investments={investments}
+            incomeCategories={incomeCategoriesList}
           />
         );
     }
