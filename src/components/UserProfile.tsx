@@ -1,6 +1,6 @@
 import React from 'react';
-import { Box, Avatar, Typography, Button, Menu, MenuItem, IconButton } from '@mui/material';
-import { AccountCircle, Logout, Settings } from '@mui/icons-material';
+import { Box, Avatar, Typography, Button, Menu, MenuItem, IconButton, Divider } from '@mui/material';
+import { AccountCircle, Logout, Settings, Email } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 
 const UserProfile: React.FC = () => {
@@ -44,9 +44,6 @@ const UserProfile: React.FC = () => {
       <Typography variant="body2" sx={{ color: 'white', display: { xs: 'none', sm: 'block' } }}>
         {user.name}
       </Typography>
-      <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)', display: { xs: 'none', sm: 'block' } }}>
-        {user.email}
-      </Typography>
 
       <Menu
         anchorEl={anchorEl}
@@ -60,6 +57,12 @@ const UserProfile: React.FC = () => {
           vertical: 'top',
           horizontal: 'right',
         }}
+        PaperProps={{
+          sx: {
+            minWidth: 200,
+            mt: 1
+          }
+        }}
       >
         <MenuItem onClick={handleClose}>
           <AccountCircle sx={{ mr: 1 }} />
@@ -69,6 +72,12 @@ const UserProfile: React.FC = () => {
           <Settings sx={{ mr: 1 }} />
           Settings
         </MenuItem>
+        <Divider />
+        <MenuItem disabled sx={{ opacity: 0.7 }}>
+          <Email sx={{ mr: 1 }} />
+          {user.email}
+        </MenuItem>
+        <Divider />
         <MenuItem onClick={handleLogout} sx={{ color: 'error.main' }}>
           <Logout sx={{ mr: 1 }} />
           Logout

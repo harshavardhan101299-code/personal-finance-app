@@ -70,23 +70,52 @@ export class GoogleAuthService {
         throw new Error('Code verifier not found');
       }
 
-      // Exchange code for tokens
-      const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+      // Exchange code for tokens - try without client_secret first (for SPA)
+      const tokenRequestBody = {
+        client_id: GOOGLE_CLIENT_ID,
+        code,
+        code_verifier: codeVerifier,
+        grant_type: 'authorization_code',
+        redirect_uri: REDIRECT_URI,
+      };
+      
+      console.log('Token request body:', tokenRequestBody);
+      console.log('Client ID being sent:', GOOGLE_CLIENT_ID);
+      console.log('Redirect URI being sent:', REDIRECT_URI);
+      
+      let tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: new URLSearchParams({
-          client_id: GOOGLE_CLIENT_ID,
-          code,
-          code_verifier: codeVerifier,
-          grant_type: 'authorization_code',
-          redirect_uri: REDIRECT_URI,
-        }),
+        body: new URLSearchParams(tokenRequestBody),
       });
 
+      // If first attempt fails, try with client_secret (for web applications)
       if (!tokenResponse.ok) {
-        throw new Error('Failed to exchange code for tokens');
+        console.log('First attempt failed, trying with client_secret...');
+        const tokenRequestBodyWithSecret = {
+          ...tokenRequestBody,
+          client_secret: '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', // Your client secret
+        };
+        
+        tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: new URLSearchParams(tokenRequestBodyWithSecret),
+        });
+      }
+
+      if (!tokenResponse.ok) {
+        const errorText = await tokenResponse.text();
+        console.error('Token exchange failed:', {
+          status: tokenResponse.status,
+          statusText: tokenResponse.statusText,
+          response: errorText
+        });
+        throw new Error(`Failed to exchange code for tokens: ${tokenResponse.status} ${tokenResponse.statusText}`);
       }
 
       const tokenData = await tokenResponse.json();

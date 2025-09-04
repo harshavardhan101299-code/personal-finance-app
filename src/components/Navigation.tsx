@@ -33,19 +33,37 @@ const Navigation: React.FC<NavigationProps> = ({ currentTab, onTabChange }) => {
     <AppBar position="static" elevation={0}>
       <Container maxWidth="xl">
         <Toolbar sx={{ px: { xs: 1, sm: 2 } }}>
-          <Typography 
-            variant="h6" 
-            component="div" 
-            sx={{ 
-              flexGrow: 0, 
-              mr: { xs: 2, md: 4 },
-              fontWeight: 700,
-              fontSize: { xs: '1.1rem', sm: '1.25rem' },
-              color: 'white'
-            }}
-          >
-            💰 Harsha's Finance
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 0, mr: { xs: 2, md: 4 } }}>
+            <Typography 
+              variant="h6" 
+              component="div" 
+              sx={{ 
+                fontWeight: 700,
+                fontSize: { xs: '1.1rem', sm: '1.25rem' },
+                color: 'white',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1
+              }}
+            >
+              <Box 
+                component="span"
+                sx={{ 
+                  fontSize: { xs: '1.8rem', sm: '2rem' },
+                  color: '#FFD700',
+                  fontWeight: 'bold',
+                  fontFamily: 'serif',
+                  textShadow: '0 0 8px rgba(255, 215, 0, 0.5)',
+                  display: 'inline-block',
+                  transform: 'scale(1.2)',
+                  lineHeight: 1
+                }}
+              >
+                ₹
+              </Box>
+              Harsha's Finance
+            </Typography>
+          </Box>
           <Tabs 
             value={currentTab} 
             onChange={handleChange} 

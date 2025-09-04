@@ -43,39 +43,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return null;
   });
 
-  // Handle OAuth callback
-  useEffect(() => {
-    const handleOAuthCallback = async () => {
-      if (GoogleAuthService.isCallback()) {
-        const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get('code');
-        const state = urlParams.get('state');
-        
-        if (code && state) {
-          try {
-            const googleUser = await GoogleAuthService.handleCallback(code, state);
-            if (googleUser) {
-              const userData: User = {
-                id: googleUser.id,
-                email: googleUser.email,
-                name: googleUser.name,
-                picture: googleUser.picture,
-              };
-              login(userData);
-              
-              // Clean up URL
-              window.history.replaceState({}, document.title, window.location.pathname);
-            }
-          } catch (error) {
-            console.error('Error handling OAuth callback:', error);
-          }
-        }
-      }
-    };
-
-    handleOAuthCallback();
-  }, []);
-
   const login = (userData: User) => {
     setUser(userData);
     try {
@@ -100,6 +67,50 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.error('Error clearing user data:', error);
     }
   };
+
+  // Handle OAuth callback
+  useEffect(() => {
+    const handleOAuthCallback = async () => {
+      console.log('Checking for OAuth callback...');
+      console.log('Current URL:', window.location.href);
+      console.log('Is callback?', GoogleAuthService.isCallback());
+      
+      if (GoogleAuthService.isCallback()) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        const state = urlParams.get('state');
+        
+        console.log('OAuth callback detected:', { code: !!code, state: !!state });
+        
+        if (code && state) {
+          try {
+            console.log('Processing OAuth callback...');
+            const googleUser = await GoogleAuthService.handleCallback(code, state);
+            console.log('Google user received:', googleUser);
+            
+            if (googleUser) {
+              const userData: User = {
+                id: googleUser.id,
+                email: googleUser.email,
+                name: googleUser.name,
+                picture: googleUser.picture,
+              };
+              console.log('Logging in user:', userData);
+              login(userData);
+              
+              // Clean up URL
+              window.history.replaceState({}, document.title, window.location.pathname);
+              console.log('URL cleaned up, user should be logged in');
+            }
+          } catch (error) {
+            console.error('Error handling OAuth callback:', error);
+          }
+        }
+      }
+    };
+
+    handleOAuthCallback();
+  }, [login]);
 
   const isAuthenticated = !!user;
 
