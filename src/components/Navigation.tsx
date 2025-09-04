@@ -56,7 +56,12 @@ const Navigation: React.FC<NavigationProps> = ({ currentTab, onTabChange }) => {
                   textShadow: '0 0 8px rgba(255, 215, 0, 0.5)',
                   display: 'inline-block',
                   transform: 'scale(1.2)',
-                  lineHeight: 1
+                  lineHeight: 1,
+                  transition: 'all 0.2s ease-in-out',
+                  '&:hover': {
+                    textShadow: '0 0 12px rgba(255, 215, 0, 0.8)',
+                    transform: 'scale(1.25)'
+                  }
                 }}
               >
                 ₹
