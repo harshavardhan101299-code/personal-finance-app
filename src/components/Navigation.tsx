@@ -65,7 +65,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentTab, onTabChange }) => {
                 }
               },
               '& .MuiTabs-indicator': {
-                backgroundColor: '#ff6f00',
+                backgroundColor: '#F97316',
                 height: 3,
               }
             }}

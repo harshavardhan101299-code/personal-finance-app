@@ -15,50 +15,70 @@ import { logDataValidation } from './utils/dataValidation';
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#2c3e50', // Softer dark blue
-      light: '#3498db',
-      dark: '#1a252f',
+      main: '#1E3A8A', // Deep Blue - Brand Color
+      light: '#3B82F6',
+      dark: '#1E40AF',
       contrastText: '#ffffff',
     },
     secondary: {
-      main: '#e74c3c', // Softer red
-      light: '#ff6b6b',
-      dark: '#c0392b',
+      main: '#F97316', // Bright Orange - Accent Color
+      light: '#FB923C',
+      dark: '#EA580C',
       contrastText: '#ffffff',
     },
     background: {
-      default: '#f8f9fa',
+      default: '#F9FAFB', // Very Light Gray
       paper: '#ffffff',
     },
     text: {
-      primary: '#2c3e50',
-      secondary: '#7f8c8d',
+      primary: '#1E3A8A', // Deep Blue for headings
+      secondary: '#6B7280', // Neutral Gray for supporting text
+    },
+    success: {
+      main: '#10B981', // Green for positive/income
+      light: '#34D399',
+      dark: '#059669',
+    },
+    error: {
+      main: '#EF4444', // Red for negative/expenses (use sparingly)
+      light: '#F87171',
+      dark: '#DC2626',
+    },
+    warning: {
+      main: '#F59E0B', // Amber for warnings
+      light: '#FBBF24',
+      dark: '#D97706',
+    },
+    info: {
+      main: '#3B82F6', // Blue for info
+      light: '#60A5FA',
+      dark: '#2563EB',
     },
   },
   typography: {
     fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
     h1: {
-      color: '#2c3e50',
+      color: '#1E3A8A',
       fontWeight: 600,
     },
     h2: {
-      color: '#2c3e50',
+      color: '#1E3A8A',
       fontWeight: 600,
     },
     h3: {
-      color: '#2c3e50',
+      color: '#1E3A8A',
       fontWeight: 600,
     },
     h4: {
-      color: '#2c3e50',
+      color: '#1E3A8A',
       fontWeight: 600,
     },
     h5: {
-      color: '#2c3e50',
+      color: '#1E3A8A',
       fontWeight: 600,
     },
     h6: {
-      color: '#2c3e50',
+      color: '#1E3A8A',
       fontWeight: 600,
     },
   },
@@ -68,7 +88,7 @@ const theme = createTheme({
         root: {
           boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
           borderRadius: 12,
-          border: '1px solid #ecf0f1',
+          border: '1px solid #E5E7EB',
         },
       },
     },
@@ -77,15 +97,15 @@ const theme = createTheme({
         root: {
           boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
           borderRadius: 12,
-          border: '1px solid #ecf0f1',
+          border: '1px solid #E5E7EB',
         },
       },
     },
     MuiAppBar: {
       styleOverrides: {
         root: {
-          backgroundColor: '#2c3e50',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+          backgroundColor: '#1E3A8A',
+          boxShadow: '0 4px 20px rgba(30, 58, 138, 0.15)',
         },
       },
     },
@@ -414,7 +434,7 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box sx={{ minHeight: '100vh', backgroundColor: '#f8f9fa' }}>
+      <Box sx={{ minHeight: '100vh', backgroundColor: '#F9FAFB' }}>
         <Navigation currentTab={currentTab} onTabChange={setCurrentTab} />
         <Box sx={{ pt: 2, pb: 4 }}>
           {renderContent()}

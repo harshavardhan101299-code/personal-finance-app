@@ -184,18 +184,18 @@ const Dashboard: React.FC<DashboardProps> = ({
     return status;
   }, [monthlyExpensesByCategory, categories]);
 
-  // Generate colors for charts - softer, more eye-friendly colors
+  // Generate colors for charts - new color palette
   const COLORS = [
-    '#4A90E2', // Soft blue
-    '#7ED321', // Soft green
-    '#F5A623', // Soft orange
-    '#D0021B', // Soft red
-    '#9013FE', // Soft purple
-    '#50E3C2', // Soft teal
-    '#F8E71C', // Soft yellow
-    '#BD10E0', // Soft magenta
-    '#4A4A4A', // Soft gray
-    '#417505'  // Dark green
+    '#1E3A8A', // Deep Blue - Primary
+    '#F97316', // Bright Orange - Secondary
+    '#10B981', // Green - Success/Income
+    '#6B7280', // Gray - Neutral
+    '#3B82F6', // Blue - Info
+    '#F59E0B', // Amber - Warning
+    '#8B5CF6', // Purple - Alternative
+    '#06B6D4', // Cyan - Alternative
+    '#84CC16', // Lime - Alternative
+    '#F97316'  // Orange - Secondary (repeat for more categories)
   ];
 
   const months = [
@@ -230,7 +230,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           gutterBottom 
           sx={{ 
             fontWeight: 700,
-            color: '#2c3e50',
+            color: '#1E3A8A',
             fontSize: { xs: '1.75rem', sm: '2.25rem', md: '2.75rem' },
             textAlign: { xs: 'center', sm: 'left' }
           }}
@@ -243,8 +243,8 @@ const Dashboard: React.FC<DashboardProps> = ({
             startIcon={<DownloadIcon />}
             onClick={() => setReportOpen(true)}
             sx={{
-              backgroundColor: '#27ae60',
-              '&:hover': { backgroundColor: '#229954' },
+              backgroundColor: '#10B981',
+              '&:hover': { backgroundColor: '#059669' },
               mr: 1
             }}
           >
@@ -254,11 +254,11 @@ const Dashboard: React.FC<DashboardProps> = ({
             <IconButton 
               onClick={onRefresh}
               sx={{ 
-                bgcolor: '#ecf0f1',
-                '&:hover': { bgcolor: '#d5dbdb' }
+                bgcolor: '#F3F4F6',
+                '&:hover': { bgcolor: '#E5E7EB' }
               }}
             >
-              <RefreshIcon sx={{ color: '#2c3e50' }} />
+              <RefreshIcon sx={{ color: '#1E3A8A' }} />
             </IconButton>
           </Tooltip>
         </Box>
@@ -272,7 +272,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         width: '100%'
       }}>
         <FormControl sx={{ minWidth: 250 }}>
-          <InputLabel sx={{ color: '#2c3e50' }}>Select Month</InputLabel>
+          <InputLabel sx={{ color: '#1E3A8A' }}>Select Month</InputLabel>
           <Select
             value={selectedMonth}
             label="Select Month"
@@ -280,14 +280,14 @@ const Dashboard: React.FC<DashboardProps> = ({
             sx={{
               '& .MuiOutlinedInput-root': {
                 '&:hover fieldset': {
-                  borderColor: '#3498db',
+                  borderColor: '#3B82F6',
                 },
                 '&.Mui-focused fieldset': {
-                  borderColor: '#3498db',
+                  borderColor: '#3B82F6',
                 },
               },
               '& .MuiSelect-select': {
-                color: '#2c3e50',
+                color: '#1E3A8A',
                 fontWeight: 500
               }
             }}
@@ -309,83 +309,83 @@ const Dashboard: React.FC<DashboardProps> = ({
         mb: 4 
       }}>
         <Card sx={{ 
-          background: 'linear-gradient(135deg, #3498db 0%, #2980b9 100%)',
+          background: 'linear-gradient(135deg, #1E3A8A 0%, #1E40AF 100%)',
           color: 'white',
           height: '100%',
           transition: 'transform 0.2s ease-in-out',
           '&:hover': {
             transform: 'translateY(-4px)',
-            boxShadow: '0 8px 25px rgba(52, 152, 219, 0.3)'
+            boxShadow: '0 8px 25px rgba(30, 58, 138, 0.3)'
           }
         }}>
           <CardContent sx={{ textAlign: 'center', p: 3 }}>
-            <AccountBalanceIcon sx={{ fontSize: 40, mb: 2, opacity: 0.9 }} />
-            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, opacity: 0.9 }}>
+            <AccountBalanceIcon sx={{ fontSize: 40, mb: 2, color: 'white' }} />
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, color: 'white' }}>
               Total Income
             </Typography>
-            <Typography variant="h4" sx={{ fontWeight: 700, color: '#ecf0f1' }}>
+            <Typography variant="h4" sx={{ fontWeight: 700, color: '#F9FAFB' }}>
               ₹{metrics.totalIncome.toLocaleString()}
             </Typography>
           </CardContent>
         </Card>
 
         <Card sx={{ 
-          background: 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)',
+          background: 'linear-gradient(135deg, #F97316 0%, #EA580C 100%)',
           color: 'white',
           height: '100%',
           transition: 'transform 0.2s ease-in-out',
           '&:hover': {
             transform: 'translateY(-4px)',
-            boxShadow: '0 8px 25px rgba(231, 76, 60, 0.3)'
+            boxShadow: '0 8px 25px rgba(249, 115, 22, 0.3)'
           }
         }}>
           <CardContent sx={{ textAlign: 'center', p: 3 }}>
-            <TrendingDownIcon sx={{ fontSize: 40, mb: 2, opacity: 0.9 }} />
-            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, opacity: 0.9 }}>
+            <TrendingDownIcon sx={{ fontSize: 40, mb: 2, color: 'white' }} />
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, color: 'white' }}>
               Total Expenses
             </Typography>
-            <Typography variant="h4" sx={{ fontWeight: 700, color: '#ecf0f1' }}>
+            <Typography variant="h4" sx={{ fontWeight: 700, color: '#F9FAFB' }}>
               ₹{metrics.totalExpenses.toLocaleString()}
             </Typography>
           </CardContent>
         </Card>
 
         <Card sx={{ 
-          background: 'linear-gradient(135deg, #27ae60 0%, #229954 100%)',
+          background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
           color: 'white',
           height: '100%',
           transition: 'transform 0.2s ease-in-out',
           '&:hover': {
             transform: 'translateY(-4px)',
-            boxShadow: '0 8px 25px rgba(39, 174, 96, 0.3)'
+            boxShadow: '0 8px 25px rgba(16, 185, 129, 0.3)'
           }
         }}>
           <CardContent sx={{ textAlign: 'center', p: 3 }}>
-            <TrendingUpIcon sx={{ fontSize: 40, mb: 2, opacity: 0.9 }} />
-            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, opacity: 0.9 }}>
+            <TrendingUpIcon sx={{ fontSize: 40, mb: 2, color: 'white' }} />
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, color: 'white' }}>
               Net Savings
             </Typography>
-            <Typography variant="h4" sx={{ fontWeight: 700, color: '#ecf0f1' }}>
+            <Typography variant="h4" sx={{ fontWeight: 700, color: '#F9FAFB' }}>
               ₹{metrics.netSavings.toLocaleString()}
             </Typography>
           </CardContent>
         </Card>
 
         <Card sx={{ 
-          background: 'linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%)',
+          background: 'linear-gradient(135deg, #6B7280 0%, #4B5563 100%)',
           color: 'white',
           height: '100%',
           transition: 'transform 0.2s ease-in-out',
           '&:hover': {
             transform: 'translateY(-4px)',
-            boxShadow: '0 8px 25px rgba(155, 89, 182, 0.3)'
+            boxShadow: '0 8px 25px rgba(107, 114, 128, 0.3)'
           }
         }}>
           <CardContent sx={{ textAlign: 'center', p: 3 }}>
-            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, opacity: 0.9 }}>
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, color: 'white' }}>
               Budget Used
             </Typography>
-            <Typography variant="h4" sx={{ fontWeight: 700, color: '#ecf0f1', mb: 2 }}>
+            <Typography variant="h4" sx={{ fontWeight: 700, color: '#F9FAFB', mb: 2 }}>
               {metrics.budgetUtilization.toFixed(1)}%
             </Typography>
             <LinearProgress 
@@ -396,7 +396,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 borderRadius: 4,
                 backgroundColor: 'rgba(255,255,255,0.3)',
                 '& .MuiLinearProgress-bar': {
-                  backgroundColor: '#ecf0f1',
+                  backgroundColor: '#F9FAFB',
                   borderRadius: 4,
                 }
               }}
@@ -418,11 +418,11 @@ const Dashboard: React.FC<DashboardProps> = ({
           height: 500,
           borderRadius: 3,
           boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-          border: '1px solid #ecf0f1'
+          border: '1px solid #E5E7EB'
         }}>
           <Typography variant="h6" gutterBottom sx={{ 
             fontWeight: 600, 
-            color: '#2c3e50', 
+            color: '#1E3A8A', 
             mb: 3,
             fontSize: '1.1rem'
           }}>
@@ -453,7 +453,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         `₹${value.toLocaleString()}`, 
                         props.payload.category
                       ]}
-                      labelStyle={{ color: '#2c3e50', fontWeight: 'bold' }}
+                      labelStyle={{ color: '#1E3A8A', fontWeight: 'bold' }}
                       contentStyle={{ 
                         backgroundColor: '#ffffff',
                         border: '1px solid #e0e0e0',
@@ -473,7 +473,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               }}>
                 <Typography variant="subtitle2" sx={{ 
                   fontWeight: 600, 
-                  color: '#2c3e50', 
+                  color: '#1E3A8A', 
                   mb: 2,
                   fontSize: '0.9rem'
                 }}>
@@ -537,7 +537,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           height: 500,
           borderRadius: 3,
           boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-          border: '1px solid #ecf0f1'
+          border: '1px solid #E5E7EB'
         }}>
           <Typography variant="h6" gutterBottom sx={{ 
             fontWeight: 600, 
@@ -550,16 +550,16 @@ const Dashboard: React.FC<DashboardProps> = ({
           {monthlyExpensesByCategory.length > 0 ? (
             <ResponsiveContainer width="100%" height={400}>
               <BarChart data={[
-                { name: 'Income', amount: metrics.totalIncome, color: '#2ECC71' },
-                { name: 'Expenses', amount: metrics.totalExpenses, color: '#E74C3C' }
+                { name: 'Income', amount: metrics.totalIncome, color: '#10B981' },
+                { name: 'Expenses', amount: metrics.totalExpenses, color: '#F97316' }
               ]}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#ecf0f1" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
                 <XAxis 
                   dataKey="name" 
-                  tick={{ fontSize: 12, fill: '#2c3e50', fontWeight: 600 }}
+                  tick={{ fontSize: 12, fill: '#1E3A8A', fontWeight: 600 }}
                 />
                 <YAxis 
-                  tick={{ fill: '#2c3e50', fontSize: 11 }}
+                  tick={{ fill: '#1E3A8A', fontSize: 11 }}
                   tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}k`}
                 />
                 <RechartsTooltip 
@@ -567,7 +567,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     `₹${value.toLocaleString()}`, 
                     props.payload.name
                   ]}
-                  labelStyle={{ color: '#2c3e50', fontWeight: 'bold' }}
+                  labelStyle={{ color: '#1E3A8A', fontWeight: 'bold' }}
                   contentStyle={{ 
                     backgroundColor: '#ffffff',
                     border: '1px solid #e0e0e0',
@@ -577,13 +577,13 @@ const Dashboard: React.FC<DashboardProps> = ({
                 />
                 <Bar 
                   dataKey="amount" 
-                  fill="#3498db"
+                  fill="#1E3A8A"
                   radius={[4, 4, 0, 0]}
                   name="Amount"
                 >
                   {[
-                    { name: 'Income', amount: metrics.totalIncome, color: '#2ECC71' },
-                    { name: 'Expenses', amount: metrics.totalExpenses, color: '#E74C3C' }
+                    { name: 'Income', amount: metrics.totalIncome, color: '#10B981' },
+                    { name: 'Expenses', amount: metrics.totalExpenses, color: '#F97316' }
                   ].map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
@@ -596,7 +596,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               alignItems: 'center', 
               justifyContent: 'center', 
               height: 400,
-              color: '#7f8c8d',
+              color: '#6B7280',
               fontSize: '1.1rem'
             }}>
               No expense data available
@@ -609,11 +609,11 @@ const Dashboard: React.FC<DashboardProps> = ({
           p: 3,
           borderRadius: 3,
           boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-          border: '1px solid #ecf0f1'
+          border: '1px solid #E5E7EB'
         }}>
           <Typography variant="h6" gutterBottom sx={{ 
             fontWeight: 600, 
-            color: '#2c3e50', 
+            color: '#1E3A8A', 
             mb: 2,
             fontSize: '1.1rem'
           }}>
@@ -626,7 +626,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   <ListItem sx={{ px: 0, py: 0.5 }}>
                     <ListItemAvatar>
                       <Avatar sx={{ 
-                        bgcolor: transaction.amount > 0 ? '#27ae60' : '#e74c3c',
+                        bgcolor: transaction.amount > 0 ? '#10B981' : '#F97316',
                         width: 24,
                         height: 24
                       }}>
@@ -639,16 +639,16 @@ const Dashboard: React.FC<DashboardProps> = ({
                       primaryTypographyProps={{ 
                         fontSize: '0.8rem', 
                         fontWeight: 500,
-                        color: '#2c3e50'
+                        color: '#1E3A8A'
                       }}
                       secondaryTypographyProps={{ 
                         fontSize: '0.7rem',
-                        color: '#7f8c8d'
+                        color: '#6B7280'
                       }}
                     />
                     <Typography variant="body2" sx={{ 
                       fontWeight: 600,
-                      color: transaction.amount > 0 ? '#27ae60' : '#e74c3c',
+                                              color: transaction.amount > 0 ? '#10B981' : '#F97316',
                       fontSize: '0.8rem'
                     }}>
                       ₹{Math.abs(transaction.amount).toLocaleString()}
@@ -688,24 +688,24 @@ const Dashboard: React.FC<DashboardProps> = ({
         <TableContainer>
           <Table size="small">
             <TableHead>
-              <TableRow sx={{ backgroundColor: '#f8f9fa' }}>
-                <TableCell sx={{ fontWeight: 600, color: '#2c3e50', fontSize: '0.75rem' }}>Category</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 600, color: '#2c3e50', fontSize: '0.75rem' }}>Budget</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 600, color: '#2c3e50', fontSize: '0.75rem' }}>Spent</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 600, color: '#2c3e50', fontSize: '0.75rem' }}>Remaining</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#2c3e50', fontSize: '0.75rem' }}>Progress</TableCell>
+              <TableRow sx={{ backgroundColor: '#F9FAFB' }}>
+                            <TableCell sx={{ fontWeight: 600, color: '#1E3A8A', fontSize: '0.75rem' }}>Category</TableCell>
+            <TableCell align="right" sx={{ fontWeight: 600, color: '#1E3A8A', fontSize: '0.75rem' }}>Budget</TableCell>
+            <TableCell align="right" sx={{ fontWeight: 600, color: '#1E3A8A', fontSize: '0.75rem' }}>Spent</TableCell>
+            <TableCell align="right" sx={{ fontWeight: 600, color: '#1E3A8A', fontSize: '0.75rem' }}>Remaining</TableCell>
+            <TableCell sx={{ fontWeight: 600, color: '#1E3A8A', fontSize: '0.75rem' }}>Progress</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {budgetStatus.map((status) => (
-                <TableRow key={status.category} sx={{ '&:hover': { backgroundColor: '#f8f9fa' } }}>
-                  <TableCell sx={{ fontWeight: 500, color: '#2c3e50', fontSize: '0.7rem' }}>{status.category}</TableCell>
-                  <TableCell align="right" sx={{ color: '#2c3e50', fontSize: '0.7rem' }}>₹{status.budget.toLocaleString()}</TableCell>
-                  <TableCell align="right" sx={{ color: '#2c3e50', fontSize: '0.7rem' }}>₹{status.spent.toLocaleString()}</TableCell>
+                                  <TableRow key={status.category} sx={{ '&:hover': { backgroundColor: '#F9FAFB' } }}>
+                  <TableCell sx={{ fontWeight: 500, color: '#1E3A8A', fontSize: '0.7rem' }}>{status.category}</TableCell>
+                  <TableCell align="right" sx={{ color: '#1E3A8A', fontSize: '0.7rem' }}>₹{status.budget.toLocaleString()}</TableCell>
+                  <TableCell align="right" sx={{ color: '#1E3A8A', fontSize: '0.7rem' }}>₹{status.spent.toLocaleString()}</TableCell>
                   <TableCell 
                     align="right" 
                     sx={{ 
-                      color: status.remaining >= 0 ? '#27ae60' : '#e74c3c',
+                      color: status.remaining >= 0 ? '#10B981' : '#F97316',
                       fontWeight: 600,
                       fontSize: '0.7rem'
                     }}
@@ -721,9 +721,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                           sx={{
                             height: 6,
                             borderRadius: 3,
-                            backgroundColor: '#ecf0f1',
+                            backgroundColor: '#F3F4F6',
                             '& .MuiLinearProgress-bar': {
-                              backgroundColor: status.percentage > 100 ? '#e74c3c' : '#3498db',
+                              backgroundColor: status.percentage > 100 ? '#F97316' : '#1E3A8A',
                               borderRadius: 3,
                             }
                           }}
@@ -776,7 +776,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     <ListItem sx={{ px: 0 }}>
                       <ListItemAvatar>
                         <Avatar sx={{ 
-                          bgcolor: isAfter(parseISO(bill.dueDate), new Date()) ? '#f39c12' : '#e74c3c',
+                          bgcolor: isAfter(parseISO(bill.dueDate), new Date()) ? '#F59E0B' : '#F97316',
                           width: 32,
                           height: 32
                         }}>
@@ -789,16 +789,16 @@ const Dashboard: React.FC<DashboardProps> = ({
                         primaryTypographyProps={{ 
                           fontSize: '0.9rem', 
                           fontWeight: 500,
-                          color: '#2c3e50'
+                          color: '#1E3A8A'
                         }}
                         secondaryTypographyProps={{ 
-                          fontSize: '0.8rem',
-                          color: '#7f8c8d'
+                                                  fontSize: '0.8rem',
+                        color: '#6B7280'
                         }}
                       />
                       <Typography variant="body2" sx={{ 
                         fontWeight: 600,
-                        color: '#2c3e50'
+                        color: '#1E3A8A'
                       }}>
                         ₹{bill.amount.toLocaleString()}
                       </Typography>
@@ -816,11 +816,11 @@ const Dashboard: React.FC<DashboardProps> = ({
               p: 3,
               borderRadius: 3,
               boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-              border: '1px solid #ecf0f1'
+              border: '1px solid #E5E7EB'
             }}>
               <Typography variant="h6" gutterBottom sx={{ 
                 fontWeight: 600, 
-                color: '#2c3e50', 
+                color: '#1E3A8A', 
                 mb: 2,
                 fontSize: '1.1rem'
               }}>
@@ -833,13 +833,13 @@ const Dashboard: React.FC<DashboardProps> = ({
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                       <Typography variant="body2" sx={{ 
                         fontWeight: 500,
-                        color: '#2c3e50'
+                        color: '#1E3A8A'
                       }}>
                         {goal.name}
                       </Typography>
                       <Typography variant="body2" sx={{ 
                         fontWeight: 600,
-                        color: '#2c3e50'
+                        color: '#1E3A8A'
                       }}>
                         {progress.toFixed(1)}%
                       </Typography>
@@ -850,17 +850,17 @@ const Dashboard: React.FC<DashboardProps> = ({
                       sx={{
                         height: 6,
                         borderRadius: 3,
-                        backgroundColor: '#ecf0f1',
+                        backgroundColor: '#F3F4F6',
                         '& .MuiLinearProgress-bar': {
-                          backgroundColor: progress >= 100 ? '#27ae60' : '#3498db',
+                          backgroundColor: progress >= 100 ? '#10B981' : '#1E3A8A',
                           borderRadius: 3,
                         }
                       }}
                     />
                     <Typography variant="caption" sx={{ 
-                      color: '#7f8c8d',
-                      display: 'block',
-                      mt: 0.5
+                                              color: '#6B7280',
+                        display: 'block',
+                        mt: 0.5
                     }}>
                       ₹{goal.currentAmount.toLocaleString()} / ₹{goal.targetAmount.toLocaleString()}
                     </Typography>

@@ -112,7 +112,7 @@ const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({ expenses, setExpenses, 
           variant="h4" 
           component="h1"
           sx={{
-                minWidth: 250, fontWeight: 700, color: '#1a237e' }}
+                minWidth: 250, fontWeight: 700, color: '#1E3A8A' }}
         >
           Expense Tracker
         </Typography>
@@ -122,9 +122,9 @@ const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({ expenses, setExpenses, 
           onClick={() => handleOpenDialog()}
           sx={{
                 minWidth: 250,
-            backgroundColor: '#1a237e',
+            backgroundColor: '#1E3A8A',
             '&:hover': {
-              backgroundColor: '#000051',
+              backgroundColor: '#1E40AF',
             },
             px: 3,
             py: 1.5,
@@ -139,8 +139,8 @@ const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({ expenses, setExpenses, 
       {/* Summary */}
       <Paper sx={{
                 minWidth: 250, p: 4, mb: 4 }}>
-        <Typography variant="h6" gutterBottom sx={{
-                minWidth: 250, fontWeight: 600, mb: 2, color: '#1a237e' }}>
+        <Typography variant="h6" gutterBottom           sx={{
+                minWidth: 250, fontWeight: 600, mb: 2, color: '#1E3A8A' }}>
           Summary
         </Typography>
         <Box sx={{
@@ -150,7 +150,7 @@ const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({ expenses, setExpenses, 
             color="primary"
             sx={{
                 minWidth: 250, 
-              backgroundColor: '#1a237e',
+              backgroundColor: '#1E3A8A',
               color: 'white',
               fontWeight: 600,
               fontSize: '1rem',
@@ -163,7 +163,7 @@ const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({ expenses, setExpenses, 
             color="secondary"
             sx={{
                 minWidth: 250, 
-              backgroundColor: '#ff6f00',
+              backgroundColor: '#F97316',
               color: 'white',
               fontWeight: 600,
               fontSize: '1rem',
@@ -177,31 +177,31 @@ const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({ expenses, setExpenses, 
       {/* Expenses Table */}
       <Paper sx={{
                 minWidth: 250, p: 4 }}>
-        <Typography variant="h6" gutterBottom sx={{
-                minWidth: 250, fontWeight: 600, mb: 3, color: '#1a237e' }}>
+        <Typography variant="h6" gutterBottom           sx={{
+                minWidth: 250, fontWeight: 600, mb: 3, color: '#1E3A8A' }}>
           All Expenses
         </Typography>
         <TableContainer>
           <Table>
             <TableHead>
-              <TableRow sx={{
-                minWidth: 250, backgroundColor: '#f5f5f5' }}>
+                              <TableRow sx={{
+                minWidth: 250, backgroundColor: '#F9FAFB' }}>
                 <TableCell sx={{
-                minWidth: 250, fontWeight: 600, color: '#1a237e' }}>Date</TableCell>
+                minWidth: 250, fontWeight: 600, color: '#1E3A8A' }}>Date</TableCell>
                 <TableCell sx={{
-                minWidth: 250, fontWeight: 600, color: '#1a237e' }}>Type</TableCell>
+                minWidth: 250, fontWeight: 600, color: '#1E3A8A' }}>Type</TableCell>
                 <TableCell sx={{
-                minWidth: 250, fontWeight: 600, color: '#1a237e' }}>Description</TableCell>
+                minWidth: 250, fontWeight: 600, color: '#1E3A8A' }}>Description</TableCell>
                 <TableCell align="right" sx={{
-                minWidth: 250, fontWeight: 600, color: '#1a237e' }}>Amount</TableCell>
+                minWidth: 250, fontWeight: 600, color: '#1E3A8A' }}>Amount</TableCell>
                 <TableCell sx={{
-                minWidth: 250, fontWeight: 600, color: '#1a237e' }}>Actions</TableCell>
+                minWidth: 250, fontWeight: 600, color: '#1E3A8A' }}>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {expenses.map((expense) => (
                 <TableRow key={expense.id} sx={{
-                minWidth: 250, '&:hover': { backgroundColor: '#f8f9fa' } }}>
+                minWidth: 250, '&:hover': { backgroundColor: '#F9FAFB' } }}>
                   <TableCell sx={{
                 minWidth: 250, fontWeight: 500 }}>
                     {format(parseISO(expense.date), 'dd-MMM')}
