@@ -42,6 +42,7 @@ import {
 import { format, parseISO, isAfter, addDays } from 'date-fns';
 import { ExpenseEntry, ExpenseCategory, FinancialGoal, Bill, DashboardMetrics, Investment, IncomeCategory } from '../types';
 import MonthlyReport from './MonthlyReport';
+import { useAuth } from '../contexts/AuthContext';
 
 interface DashboardProps {
   expenses: ExpenseEntry[];
@@ -69,6 +70,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   incomeCategories = []
 }) => {
   const [reportOpen, setReportOpen] = useState(false);
+  const { user } = useAuth();
 
   // Enhanced expense filtering with income/expense separation
   const filteredExpenses = useMemo(() => {
@@ -263,6 +265,31 @@ const Dashboard: React.FC<DashboardProps> = ({
           </Tooltip>
         </Box>
       </Box>
+
+      {/* Welcome Message */}
+      {user && (
+        <Box sx={{ 
+          mb: 3, 
+          p: 3, 
+          backgroundColor: '#F0F9FF', 
+          borderRadius: 3,
+          border: '1px solid #BAE6FD',
+          textAlign: 'center'
+        }}>
+          <Typography variant="h5" sx={{ 
+            color: '#1E3A8A', 
+            fontWeight: 600, 
+            mb: 1 
+          }}>
+            Welcome back, {user.name}! 👋
+          </Typography>
+          <Typography variant="body1" sx={{ 
+            color: '#6B7280' 
+          }}>
+            Your personal finance data is secure and private. No one else can see your financial information.
+          </Typography>
+        </Box>
+      )}
 
       {/* Month Selection - Centered */}
       <Box sx={{ 

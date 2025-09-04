@@ -17,6 +17,7 @@ import {
   Payment as BillsIcon,
   TrendingUp as IncomeIcon
 } from '@mui/icons-material';
+import UserProfile from './UserProfile';
 
 interface NavigationProps {
   currentTab: number;
@@ -143,6 +144,10 @@ const Navigation: React.FC<NavigationProps> = ({ currentTab, onTabChange }) => {
               }}
             />
           </Tabs>
+          
+          <Box sx={{ ml: 2 }}>
+            <UserProfile />
+          </Box>
         </Toolbar>
       </Container>
     </AppBar>

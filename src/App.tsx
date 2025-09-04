@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ThemeProvider, createTheme, CssBaseline, Box } from '@mui/material';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Navigation from './components/Navigation';
 import Dashboard from './components/Dashboard';
 import ExpenseTracker from './components/ExpenseTracker';
@@ -8,9 +9,11 @@ import BudgetManager from './components/BudgetManager';
 import FinancialGoals from './components/FinancialGoals';
 import BillManager from './components/BillManager';
 import DataUpload from './components/DataUpload';
+import Login from './components/Login';
 import { ExpenseEntry, ExpenseCategory, FinancialGoal, Bill, Investment, IncomeCategory } from './types';
-import { expenseCategories, allExpenses, allIncome, allInvestments, incomeCategories } from './data/sampleData';
+import { expenseCategories, allIncome, allInvestments, incomeCategories } from './data/sampleData';
 import { logDataValidation } from './utils/dataValidation';
+import { UserDataStorage } from './utils/userDataStorage';
 
 const theme = createTheme({
   palette: {
@@ -113,107 +116,59 @@ const theme = createTheme({
 });
 
 function App() {
+  const { user, isAuthenticated } = useAuth();
   const [currentTab, setCurrentTab] = useState(0);
   const [selectedMonth, setSelectedMonth] = useState('2025-08');
   
-  // Robust expense management with localStorage sync
+  // User-specific data storage
+  const userStorage = user ? new UserDataStorage(user.id) : null;
+  
+  // Robust expense management with user-specific localStorage sync
   const [expenses, setExpenses] = useState<ExpenseEntry[]>(() => {
-    try {
-      const saved = localStorage.getItem('expenses');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        console.log('Loaded expenses from localStorage:', parsed.length);
-        
-        // Check if we have the default data structure
-        const hasDefaultData = parsed.some((exp: ExpenseEntry) => exp.id.startsWith('apr-') || exp.id.startsWith('may-') || exp.id.startsWith('jun-') || exp.id.startsWith('jul-') || exp.id.startsWith('aug-'));
-        
-        if (!hasDefaultData) {
-          // If no default data, merge with default data
-          const mergedExpenses = [...allExpenses, ...parsed];
-          console.log('Merged default data with localStorage data:', mergedExpenses.length);
-          localStorage.setItem('expenses', JSON.stringify(mergedExpenses));
-          logDataValidation(mergedExpenses, expenseCategories);
-          return mergedExpenses;
-        }
-        
-        // Validate loaded data
-        logDataValidation(parsed, expenseCategories);
-        return parsed;
-      }
-    } catch (error) {
-      console.error('Error loading expenses from localStorage:', error);
-    }
+    if (!userStorage) return [];
     
-    console.log('Using default expenses:', allExpenses.length);
-    // Validate default data and save to localStorage
-    logDataValidation(allExpenses, expenseCategories);
-    localStorage.setItem('expenses', JSON.stringify(allExpenses));
-    return allExpenses;
+    try {
+      const saved = userStorage.getExpenses();
+      console.log('Loaded user expenses from localStorage:', saved.length);
+      
+      // Validate loaded data
+      logDataValidation(saved, expenseCategories);
+      return saved;
+    } catch (error) {
+      console.error('Error loading user expenses from localStorage:', error);
+      return [];
+    }
   });
   
-  const [categories, setCategories] = useState<ExpenseCategory[]>(expenseCategories);
+  const [categories, setCategories] = useState<ExpenseCategory[]>(() => {
+    if (!userStorage) return expenseCategories;
+    const saved = userStorage.getCategories();
+    return saved.length > 0 ? saved : expenseCategories;
+  });
   const [incomeCategoriesList] = useState<IncomeCategory[]>(incomeCategories);
 
   // Financial Goals state management
   const [goals, setGoals] = useState<FinancialGoal[]>(() => {
-    try {
-      const saved = localStorage.getItem('financialGoals');
-      if (saved) {
-        return JSON.parse(saved);
-      }
-    } catch (error) {
-      console.error('Error loading goals from localStorage:', error);
-    }
-    return [];
+    if (!userStorage) return [];
+    return userStorage.getGoals();
   });
 
   // Bills state management
   const [bills, setBills] = useState<Bill[]>(() => {
-    try {
-      const saved = localStorage.getItem('bills');
-      if (saved) {
-        return JSON.parse(saved);
-      }
-    } catch (error) {
-      console.error('Error loading bills from localStorage:', error);
-    }
-    return [];
+    if (!userStorage) return [];
+    return userStorage.getBills();
   });
 
   // Income state management
   const [income, setIncome] = useState<ExpenseEntry[]>(() => {
-    try {
-      const saved = localStorage.getItem('income');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        console.log('Loaded income from localStorage:', parsed.length);
-        return parsed;
-      }
-    } catch (error) {
-      console.error('Error loading income from localStorage:', error);
-    }
-    
-    console.log('Using default income:', allIncome.length);
-    localStorage.setItem('income', JSON.stringify(allIncome));
-    return allIncome;
+    if (!userStorage) return [];
+    return userStorage.getIncome();
   });
 
   // Investment state management
   const [investments, setInvestments] = useState<Investment[]>(() => {
-    try {
-      const saved = localStorage.getItem('investments');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        console.log('Loaded investments from localStorage:', parsed.length);
-        return parsed;
-      }
-    } catch (error) {
-      console.error('Error loading investments from localStorage:', error);
-    }
-    
-    console.log('Using default investments:', allInvestments.length);
-    localStorage.setItem('investments', JSON.stringify(allInvestments));
-    return allInvestments;
+    if (!userStorage) return [];
+    return userStorage.getInvestments();
   });
 
   // Robust expense update function
@@ -227,84 +182,92 @@ function App() {
     }
     
     setExpenses(newExpenses);
-    try {
-      localStorage.setItem('expenses', JSON.stringify(newExpenses));
-      console.log('Saved to localStorage successfully');
-    } catch (error) {
-      console.error('Error saving to localStorage:', error);
+    if (userStorage) {
+      try {
+        userStorage.setExpenses(newExpenses);
+        console.log('Saved to user localStorage successfully');
+      } catch (error) {
+        console.error('Error saving to user localStorage:', error);
+      }
     }
-  }, [categories]);
+  }, [categories, userStorage]);
 
 
 
-  // Save goals to localStorage when they change
+  // Save goals to user localStorage when they change
   useEffect(() => {
-    try {
-      localStorage.setItem('financialGoals', JSON.stringify(goals));
-    } catch (error) {
-      console.error('Error saving goals to localStorage:', error);
+    if (userStorage) {
+      try {
+        userStorage.setGoals(goals);
+      } catch (error) {
+        console.error('Error saving goals to user localStorage:', error);
+      }
     }
-  }, [goals]);
+  }, [goals, userStorage]);
 
-  // Save bills to localStorage when they change
+  // Save bills to user localStorage when they change
   useEffect(() => {
-    try {
-      localStorage.setItem('bills', JSON.stringify(bills));
-    } catch (error) {
-      console.error('Error saving bills to localStorage:', error);
+    if (userStorage) {
+      try {
+        userStorage.setBills(bills);
+      } catch (error) {
+        console.error('Error saving bills to user localStorage:', error);
+      }
     }
-  }, [bills]);
+  }, [bills, userStorage]);
 
-  // Save income to localStorage when it changes
+  // Save income to user localStorage when it changes
   useEffect(() => {
-    try {
-      localStorage.setItem('income', JSON.stringify(income));
-    } catch (error) {
-      console.error('Error saving income to localStorage:', error);
+    if (userStorage) {
+      try {
+        userStorage.setIncome(income);
+      } catch (error) {
+        console.error('Error saving income to user localStorage:', error);
+      }
     }
-  }, [income]);
+  }, [income, userStorage]);
 
-  // Save investments to localStorage when they change
+  // Save investments to user localStorage when they change
   useEffect(() => {
-    try {
-      localStorage.setItem('investments', JSON.stringify(investments));
-    } catch (error) {
-      console.error('Error saving investments to localStorage:', error);
+    if (userStorage) {
+      try {
+        userStorage.setInvestments(investments);
+      } catch (error) {
+        console.error('Error saving investments to user localStorage:', error);
+      }
     }
-  }, [investments]);
+  }, [investments, userStorage]);
 
   // Refresh function for Dashboard
   const refreshData = useCallback(() => {
     console.log('Manual refresh triggered');
-    try {
-      const saved = localStorage.getItem('expenses');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        console.log('Refreshed expenses:', parsed.length);
-        setExpenses(parsed);
+    if (userStorage) {
+      try {
+        const saved = userStorage.getExpenses();
+        console.log('Refreshed user expenses:', saved.length);
+        setExpenses(saved);
+      } catch (error) {
+        console.error('Error refreshing user data:', error);
       }
-    } catch (error) {
-      console.error('Error refreshing data:', error);
     }
-  }, []);
+  }, [userStorage]);
 
   // Auto-refresh every 3 seconds to catch quick-add updates
   useEffect(() => {
+    if (!userStorage) return;
+    
     const interval = setInterval(() => {
       try {
-        const saved = localStorage.getItem('expenses');
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          // Only update if we have more expenses (new additions) or if the data is different
-          const currentIds = new Set(expenses.map((exp: ExpenseEntry) => exp.id));
-          
-          // Check if there are new expenses (additions)
-          const hasNewExpenses = parsed.some((exp: ExpenseEntry) => !currentIds.has(exp.id));
-          
-          if (hasNewExpenses) {
-            console.log('Auto-refresh: detected new expenses in localStorage');
-            setExpenses(parsed);
-          }
+        const saved = userStorage.getExpenses();
+        // Only update if we have more expenses (new additions) or if the data is different
+        const currentIds = new Set(expenses.map((exp: ExpenseEntry) => exp.id));
+        
+        // Check if there are new expenses (additions)
+        const hasNewExpenses = saved.some((exp: ExpenseEntry) => !currentIds.has(exp.id));
+        
+        if (hasNewExpenses) {
+          console.log('Auto-refresh: detected new expenses in user localStorage');
+          setExpenses(saved);
         }
       } catch (error) {
         console.error('Error in auto-refresh:', error);
@@ -312,15 +275,18 @@ function App() {
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [expenses]);
+  }, [expenses, userStorage]);
 
   // Listen for storage events (cross-tab sync)
   useEffect(() => {
+    if (!userStorage) return;
+    
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'expenses' && e.newValue) {
+      const userExpensesKey = userStorage.getKey('expenses');
+      if (e.key === userExpensesKey && e.newValue) {
         try {
           const newExpenses = JSON.parse(e.newValue);
-          console.log('Storage event: updating expenses:', newExpenses.length);
+          console.log('Storage event: updating user expenses:', newExpenses.length);
           setExpenses(newExpenses);
         } catch (error) {
           console.error('Error parsing storage event:', error);
@@ -330,7 +296,7 @@ function App() {
 
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
+  }, [userStorage]);
 
   const handleDataUpload = (uploadedExpenses: ExpenseEntry[], uploadedCategories: ExpenseCategory[]) => {
     console.log('Data upload: merging expenses');
@@ -338,7 +304,7 @@ function App() {
     updateExpenses(mergedExpenses);
     
     // Merge categories
-    const mergedCategories = [...expenseCategories];
+    const mergedCategories = [...categories];
     uploadedCategories.forEach(uploadedCat => {
       const existingCat = mergedCategories.find(cat => cat.name.toLowerCase() === uploadedCat.name.toLowerCase());
       if (!existingCat) {
@@ -347,10 +313,17 @@ function App() {
     });
     
     setCategories(mergedCategories);
+    if (userStorage) {
+      userStorage.setCategories(mergedCategories);
+    }
     setCurrentTab(0); // Switch to Dashboard
   };
 
   const renderContent = () => {
+    if (!isAuthenticated) {
+      return <Login onLogin={() => {}} />;
+    }
+
     switch (currentTab) {
       case 0:
         return (
@@ -435,7 +408,9 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Box sx={{ minHeight: '100vh', backgroundColor: '#F9FAFB' }}>
-        <Navigation currentTab={currentTab} onTabChange={setCurrentTab} />
+        {isAuthenticated && (
+          <Navigation currentTab={currentTab} onTabChange={setCurrentTab} />
+        )}
         <Box sx={{ pt: 2, pb: 4 }}>
           {renderContent()}
         </Box>
@@ -444,4 +419,12 @@ function App() {
   );
 }
 
-export default App;
+const AppWrapper: React.FC = () => {
+  return (
+    <AuthProvider>
+      <App />
+    </AuthProvider>
+  );
+};
+
+export default AppWrapper;
