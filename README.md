@@ -226,4 +226,4 @@ This project is licensed under the MIT License.
 
 **Built with ❤️ for better financial management**
 
-<!-- Updated for Google OAuth production deployment -->
+<!-- Updated for Google OAuth production deployment - Environment variables configured -->
