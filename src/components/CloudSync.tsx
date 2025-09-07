@@ -21,6 +21,7 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { UserDataStorage } from '../utils/userDataStorage';
+import { CloudStorageService } from '../services/cloudStorageService';
 
 interface SyncStatus {
   isEnabled: boolean;
@@ -42,10 +43,21 @@ const CloudSync: React.FC = () => {
 
   useEffect(() => {
     if (userStorage) {
+      // Check cloud sync status immediately
       setSyncStatus(prev => ({
         ...prev,
         isEnabled: userStorage.isCloudSyncEnabled(),
       }));
+      
+      // Also check after a delay to allow for async initialization
+      const timer = setTimeout(() => {
+        setSyncStatus(prev => ({
+          ...prev,
+          isEnabled: userStorage.isCloudSyncEnabled(),
+        }));
+      }, 3000);
+      
+      return () => clearTimeout(timer);
     }
   }, [userStorage]);
 
@@ -231,7 +243,47 @@ const CloudSync: React.FC = () => {
         )}
 
         {!syncStatus.isEnabled && (
-          <Alert severity="info" sx={{ mt: 2 }}>
+          <Alert 
+            severity="info" 
+            sx={{ mt: 2 }}
+            action={
+              <Button
+                color="inherit"
+                size="small"
+                onClick={async () => {
+                  if (userStorage) {
+                    setSyncStatus(prev => ({ ...prev, isSyncing: true, error: null }));
+                    try {
+                      // Force recheck cloud sync availability
+                      const reinitialized = await CloudStorageService.reinitializeFromStoredToken();
+                      if (reinitialized) {
+                        setSyncStatus(prev => ({
+                          ...prev,
+                          isEnabled: userStorage.isCloudSyncEnabled(),
+                          isSyncing: false,
+                        }));
+                      } else {
+                        setSyncStatus(prev => ({
+                          ...prev,
+                          isSyncing: false,
+                          error: 'Failed to initialize cloud sync. Please try logging in again.',
+                        }));
+                      }
+                    } catch (error) {
+                      setSyncStatus(prev => ({
+                        ...prev,
+                        isSyncing: false,
+                        error: 'Error initializing cloud sync. Please check your connection.',
+                      }));
+                    }
+                  }
+                }}
+                disabled={syncStatus.isSyncing}
+              >
+                {syncStatus.isSyncing ? 'Retrying...' : 'Retry'}
+              </Button>
+            }
+          >
             Cloud sync is not available. Make sure you're logged in with Google and have granted
             the necessary permissions for Google Drive access.
           </Alert>

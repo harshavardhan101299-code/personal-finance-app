@@ -134,6 +134,9 @@ export class GoogleAuthService {
 
       const userData = await userResponse.json();
       
+      // Store the access token for later use
+      localStorage.setItem('google_access_token', tokenData.access_token);
+      
       // Initialize Google Drive API for cloud storage
       try {
         await this.initializeGoogleAPIs(tokenData.access_token);
@@ -183,11 +186,16 @@ export class GoogleAuthService {
 
       // Initialize the API client
       await new Promise((resolve, reject) => {
-        window.gapi.load('client:auth2', { callback: resolve, onerror: reject });
+        window.gapi.load('client', { callback: resolve, onerror: reject });
+      });
+
+      // Initialize the client with API key and access token
+      await window.gapi.client.init({
+        apiKey: process.env.REACT_APP_GOOGLE_API_KEY || '',
+        discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
       });
 
       // Set the access token
-      window.gapi.client.setApiKey(process.env.REACT_APP_GOOGLE_API_KEY || '');
       window.gapi.client.setToken({ access_token: accessToken });
 
       // Initialize CloudStorageService

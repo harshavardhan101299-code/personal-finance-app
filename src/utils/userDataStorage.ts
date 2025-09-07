@@ -11,7 +11,18 @@ export class UserDataStorage {
   }
 
   private async checkCloudSyncAvailability(): Promise<void> {
+    // First check if cloud sync is already available
     this.cloudSyncEnabled = CloudStorageService.isAvailable();
+    
+    // If not available, try to reinitialize from stored token
+    if (!this.cloudSyncEnabled) {
+      console.log('Cloud sync not available, attempting to reinitialize from stored token...');
+      const reinitialized = await CloudStorageService.reinitializeFromStoredToken();
+      if (reinitialized) {
+        this.cloudSyncEnabled = CloudStorageService.isAvailable();
+        console.log('Cloud sync reinitialized successfully:', this.cloudSyncEnabled);
+      }
+    }
   }
 
   getKey(key: string): string {

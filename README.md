@@ -22,6 +22,7 @@ A comprehensive personal finance management application built with React, TypeSc
 - **Auto-categorization**: Intelligent expense categorization based on descriptions
 - **Quick Add**: Fast expense entry with smart suggestions and quick actions
 - **Cross-tab Sync**: Real-time synchronization across multiple browser tabs
+- **Cloud Sync**: Google Drive integration for data backup and cross-device access
 - **Responsive Design**: Works seamlessly on desktop and mobile devices
 
 ## 🛠️ Technology Stack
@@ -51,12 +52,18 @@ cd personal-finance-app
 npm install
 ```
 
-3. Start the development server:
+3. Set up Google OAuth for cloud sync (optional):
+```bash
+npm run setup-env
+```
+Follow the instructions to configure your Google Client ID and API Key.
+
+4. Start the development server:
 ```bash
 npm start
 ```
 
-4. Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+5. Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 
 ### Quick Add Feature
 Access the quick add form at `/quick-add.html` for fast expense entry with:
@@ -70,10 +77,12 @@ Access the quick add form at `/quick-add.html` for fast expense entry with:
 ### Navigation Tabs
 1. **Dashboard**: Overview with charts and key metrics
 2. **Expenses**: Detailed expense tracking and management
-3. **Budget**: Budget setting and monitoring
-4. **Goals**: Financial goals and progress tracking
-5. **Bills**: Bill management and payment tracking
-6. **Upload**: Data import functionality
+3. **Income**: Income tracking and management
+4. **Budget**: Budget setting and monitoring
+5. **Goals**: Financial goals and progress tracking
+6. **Bills**: Bill management and payment tracking
+7. **Upload**: Data import functionality
+8. **Cloud Sync**: Google Drive integration for data backup
 
 ### Key Components
 - `Dashboard.tsx`: Main dashboard with analytics and metrics
@@ -200,9 +209,16 @@ npm run build
 ## 🔒 Data Privacy
 
 - All data is stored locally in your browser's localStorage
-- No data is sent to external servers
+- Optional cloud sync to Google Drive (your private folder)
+- No data is sent to external servers except for cloud backup
 - Your financial information stays private and secure
 - Export your data anytime for backup
+
+## ☁️ Cloud Sync Setup
+
+For Google Drive integration, see the detailed setup guide:
+- [Cloud Sync Setup Guide](CLOUD_SYNC_SETUP.md)
+- [Google OAuth Setup Guide](GOOGLE_OAUTH_SETUP.md)
 
 ## 🤝 Contributing
 

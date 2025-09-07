@@ -158,7 +158,22 @@ export class CloudStorageService {
    * Check if Google Drive API is available and user is authenticated
    */
   static isAvailable(): boolean {
-    return !!(window.gapi && window.gapi.client && window.gapi.client.drive && window.gapi.auth2?.getAuthInstance()?.isSignedIn?.get());
+    // Check if gapi is loaded and Drive API is available
+    const hasGapi = !!(window.gapi && window.gapi.client);
+    const hasDriveAPI = !!(window.gapi?.client?.drive);
+    
+    // Check if we have an access token (from OAuth flow)
+    const hasAccessToken = !!(window.gapi?.client?.getToken?.()?.access_token);
+    
+    console.log('Cloud sync availability check:', {
+      hasGapi,
+      hasDriveAPI,
+      hasAccessToken,
+      gapiClient: !!window.gapi?.client,
+      driveAPI: !!window.gapi?.client?.drive
+    });
+    
+    return hasGapi && hasDriveAPI && hasAccessToken;
   }
 
   /**
@@ -179,6 +194,53 @@ export class CloudStorageService {
     } catch (error) {
       console.error('Error initializing Google Drive API:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Try to reinitialize Google APIs from stored token
+   */
+  static async reinitializeFromStoredToken(): Promise<boolean> {
+    try {
+      const storedToken = localStorage.getItem('google_access_token');
+      if (!storedToken) {
+        console.log('No stored Google access token found');
+        return false;
+      }
+
+      // Load Google API client if not already loaded
+      if (!window.gapi) {
+        await new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = 'https://apis.google.com/js/api.js';
+          script.onload = resolve;
+          script.onerror = reject;
+          document.head.appendChild(script);
+        });
+      }
+
+      // Initialize the API client
+      await new Promise((resolve, reject) => {
+        window.gapi.load('client', { callback: resolve, onerror: reject });
+      });
+
+      // Initialize the client with API key and stored token
+      await window.gapi.client.init({
+        apiKey: process.env.REACT_APP_GOOGLE_API_KEY || '',
+        discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
+      });
+
+      // Set the stored access token
+      window.gapi.client.setToken({ access_token: storedToken });
+
+      // Initialize Drive API
+      await this.initialize();
+      
+      console.log('Google APIs reinitialized from stored token successfully');
+      return true;
+    } catch (error) {
+      console.error('Error reinitializing Google APIs from stored token:', error);
+      return false;
     }
   }
 
