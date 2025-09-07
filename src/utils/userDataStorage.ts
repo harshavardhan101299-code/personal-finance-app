@@ -1,10 +1,17 @@
 import { ExpenseEntry, ExpenseCategory, FinancialGoal, Bill, Investment } from '../types';
+import { CloudStorageService, CloudData } from '../services/cloudStorageService';
 
 export class UserDataStorage {
   private userId: string;
+  private cloudSyncEnabled: boolean = false;
 
   constructor(userId: string) {
     this.userId = userId;
+    this.checkCloudSyncAvailability();
+  }
+
+  private async checkCloudSyncAvailability(): Promise<void> {
+    this.cloudSyncEnabled = CloudStorageService.isAvailable();
   }
 
   getKey(key: string): string {
@@ -148,6 +155,157 @@ export class UserDataStorage {
     } catch (error) {
       console.error('Error getting storage info:', error);
       return { used: 0, available: 0 };
+    }
+  }
+
+  // Cloud sync methods
+  async syncToCloud(): Promise<boolean> {
+    if (!this.cloudSyncEnabled) {
+      console.log('Cloud sync not available');
+      return false;
+    }
+
+    try {
+      const cloudData: CloudData = {
+        expenses: this.getExpenses(),
+        income: this.getIncome(),
+        categories: this.getCategories(),
+        goals: this.getGoals(),
+        bills: this.getBills(),
+        investments: this.getInvestments(),
+        lastSync: new Date().toISOString(),
+        version: 1,
+      };
+
+      await CloudStorageService.uploadData(cloudData);
+      console.log('Data synced to cloud successfully');
+      return true;
+    } catch (error) {
+      console.error('Error syncing to cloud:', error);
+      return false;
+    }
+  }
+
+  async syncFromCloud(): Promise<boolean> {
+    if (!this.cloudSyncEnabled) {
+      console.log('Cloud sync not available');
+      return false;
+    }
+
+    try {
+      const cloudData = await CloudStorageService.downloadData();
+      if (!cloudData) {
+        console.log('No cloud data found');
+        return false;
+      }
+
+      // Get current local data
+      const localData: CloudData = {
+        expenses: this.getExpenses(),
+        income: this.getIncome(),
+        categories: this.getCategories(),
+        goals: this.getGoals(),
+        bills: this.getBills(),
+        investments: this.getInvestments(),
+        lastSync: new Date().toISOString(),
+        version: 1,
+      };
+
+      // Merge data (cloud takes precedence if newer)
+      const mergedData = CloudStorageService.mergeData(localData, cloudData);
+
+      // Update local storage with merged data
+      this.setExpenses(mergedData.expenses);
+      this.setIncome(mergedData.income);
+      this.setCategories(mergedData.categories);
+      this.setGoals(mergedData.goals);
+      this.setBills(mergedData.bills);
+      this.setInvestments(mergedData.investments);
+
+      console.log('Data synced from cloud successfully');
+      return true;
+    } catch (error) {
+      console.error('Error syncing from cloud:', error);
+      return false;
+    }
+  }
+
+  async fullSync(): Promise<boolean> {
+    if (!this.cloudSyncEnabled) {
+      console.log('Cloud sync not available');
+      return false;
+    }
+
+    try {
+      // First try to sync from cloud
+      const syncedFromCloud = await this.syncFromCloud();
+      
+      // Then sync to cloud (this will upload the merged data)
+      const syncedToCloud = await this.syncToCloud();
+      
+      return syncedFromCloud || syncedToCloud;
+    } catch (error) {
+      console.error('Error during full sync:', error);
+      return false;
+    }
+  }
+
+  isCloudSyncEnabled(): boolean {
+    return this.cloudSyncEnabled;
+  }
+
+  // Override setter methods to auto-sync to cloud
+  setExpensesWithSync(expenses: ExpenseEntry[]): void {
+    this.setExpenses(expenses);
+    if (this.cloudSyncEnabled) {
+      this.syncToCloud().catch(error => 
+        console.error('Auto-sync to cloud failed:', error)
+      );
+    }
+  }
+
+  setIncomeWithSync(income: ExpenseEntry[]): void {
+    this.setIncome(income);
+    if (this.cloudSyncEnabled) {
+      this.syncToCloud().catch(error => 
+        console.error('Auto-sync to cloud failed:', error)
+      );
+    }
+  }
+
+  setCategoriesWithSync(categories: ExpenseCategory[]): void {
+    this.setCategories(categories);
+    if (this.cloudSyncEnabled) {
+      this.syncToCloud().catch(error => 
+        console.error('Auto-sync to cloud failed:', error)
+      );
+    }
+  }
+
+  setGoalsWithSync(goals: FinancialGoal[]): void {
+    this.setGoals(goals);
+    if (this.cloudSyncEnabled) {
+      this.syncToCloud().catch(error => 
+        console.error('Auto-sync to cloud failed:', error)
+      );
+    }
+  }
+
+  setBillsWithSync(bills: Bill[]): void {
+    this.setBills(bills);
+    if (this.cloudSyncEnabled) {
+      this.syncToCloud().catch(error => 
+        console.error('Auto-sync to cloud failed:', error)
+      );
+    }
+  }
+
+  setInvestmentsWithSync(investments: Investment[]): void {
+    this.setInvestments(investments);
+    if (this.cloudSyncEnabled) {
+      this.syncToCloud().catch(error => 
+        console.error('Auto-sync to cloud failed:', error)
+      );
     }
   }
 }

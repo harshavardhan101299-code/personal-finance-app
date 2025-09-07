@@ -84,10 +84,39 @@ REACT_APP_GOOGLE_CLIENT_ID=your_actual_client_id_here
    - Complete the OAuth consent screen setup in Google Console
    - Make sure you've added your email as a test user
 
+## Cloud Storage Setup
+
+The app now supports cloud storage using Google Drive API. To enable this feature:
+
+### 1. Enable Google Drive API
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Select your project
+3. Go to "APIs & Services" > "Library"
+4. Search for "Google Drive API" and enable it
+
+### 2. Add Google API Key
+1. Go to "APIs & Services" > "Credentials"
+2. Create an API key (or use existing one)
+3. Add the API key to your `.env` file:
+   ```
+   REACT_APP_GOOGLE_API_KEY=your_api_key_here
+   ```
+
+### 3. Update OAuth Scopes
+The app now requests additional permissions for Google Drive access. When users log in, they'll be asked to grant permission to:
+- View and manage their Google Drive files (for cloud sync)
+
+### How Cloud Sync Works
+- **Automatic Sync**: Data is automatically synced to Google Drive when you make changes
+- **Cross-Device Access**: Your data is accessible from any device/browser when logged in
+- **Manual Sync**: Use the "Cloud Sync" tab to manually upload/download data
+- **Data Safety**: Your data is stored in a private folder in your Google Drive
+
 ### Getting Help
 
 If you encounter issues:
 1. Check the browser console for error messages
 2. Verify all environment variables are set correctly
-3. Ensure the Google+ API is enabled in your project
+3. Ensure the Google+ API and Google Drive API are enabled in your project
 4. Check that your redirect URIs are configured correctly
+5. Make sure you've granted Drive permissions during login

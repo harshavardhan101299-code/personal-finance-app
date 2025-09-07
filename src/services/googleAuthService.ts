@@ -1,4 +1,5 @@
 import { GOOGLE_CLIENT_ID, GOOGLE_SCOPES, GOOGLE_AUTH_ENDPOINT, REDIRECT_URI } from '../config/googleAuth';
+import { CloudStorageService } from './cloudStorageService';
 
 export interface GoogleUser {
   id: string;
@@ -133,6 +134,14 @@ export class GoogleAuthService {
 
       const userData = await userResponse.json();
       
+      // Initialize Google Drive API for cloud storage
+      try {
+        await this.initializeGoogleAPIs(tokenData.access_token);
+      } catch (error) {
+        console.warn('Failed to initialize Google Drive API:', error);
+        // Don't fail the login if Drive API fails
+      }
+      
       // Clean up session storage
       sessionStorage.removeItem('code_verifier');
       sessionStorage.removeItem('oauth_state');
@@ -154,5 +163,40 @@ export class GoogleAuthService {
   static isCallback(): boolean {
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.has('code') && urlParams.has('state');
+  }
+
+  /**
+   * Initialize Google APIs (Drive API) after successful authentication
+   */
+  private static async initializeGoogleAPIs(accessToken: string): Promise<void> {
+    try {
+      // Load Google API client if not already loaded
+      if (!window.gapi) {
+        await new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = 'https://apis.google.com/js/api.js';
+          script.onload = resolve;
+          script.onerror = reject;
+          document.head.appendChild(script);
+        });
+      }
+
+      // Initialize the API client
+      await new Promise((resolve, reject) => {
+        window.gapi.load('client:auth2', { callback: resolve, onerror: reject });
+      });
+
+      // Set the access token
+      window.gapi.client.setApiKey(process.env.REACT_APP_GOOGLE_API_KEY || '');
+      window.gapi.client.setToken({ access_token: accessToken });
+
+      // Initialize CloudStorageService
+      await CloudStorageService.initialize();
+      
+      console.log('Google APIs initialized successfully');
+    } catch (error) {
+      console.error('Error initializing Google APIs:', error);
+      throw error;
+    }
   }
 }

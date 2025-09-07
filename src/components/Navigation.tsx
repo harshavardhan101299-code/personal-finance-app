@@ -15,7 +15,8 @@ import {
   CloudUpload as UploadIcon,
   Flag as GoalsIcon,
   Payment as BillsIcon,
-  TrendingUp as IncomeIcon
+  TrendingUp as IncomeIcon,
+  CloudSync as CloudSyncIcon
 } from '@mui/icons-material';
 import UserProfile from './UserProfile';
 
@@ -159,6 +160,16 @@ const Navigation: React.FC<NavigationProps> = ({ currentTab, onTabChange }) => {
             <Tab 
               icon={<UploadIcon />} 
               label="Upload" 
+              iconPosition="start"
+              sx={{ 
+                '& .MuiTab-iconWrapper': {
+                  mr: 1
+                }
+              }}
+            />
+            <Tab 
+              icon={<CloudSyncIcon />} 
+              label="Cloud Sync" 
               iconPosition="start"
               sx={{ 
                 '& .MuiTab-iconWrapper': {

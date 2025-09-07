@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { GoogleAuthService, GoogleUser } from '../services/googleAuthService';
+import { UserDataStorage } from '../utils/userDataStorage';
 
 export interface User {
   id: string;
@@ -43,10 +44,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return null;
   });
 
-  const login = (userData: User) => {
+  const login = async (userData: User) => {
     setUser(userData);
     try {
       localStorage.setItem('currentUser', JSON.stringify(userData));
+      
+      // Initialize cloud sync after login
+      const userStorage = new UserDataStorage(userData.id);
+      
+      // Wait a bit for Google APIs to be fully initialized
+      setTimeout(async () => {
+        try {
+          console.log('Attempting to sync data from cloud after login...');
+          const synced = await userStorage.fullSync();
+          if (synced) {
+            console.log('Data synced successfully after login');
+            // Trigger a page refresh to update the UI with synced data
+            window.location.reload();
+          } else {
+            console.log('No cloud data to sync or sync not available');
+          }
+        } catch (error) {
+          console.error('Error syncing data after login:', error);
+        }
+      }, 2000); // Wait 2 seconds for APIs to initialize
+      
     } catch (error) {
       console.error('Error saving user to localStorage:', error);
     }

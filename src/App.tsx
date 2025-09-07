@@ -9,6 +9,7 @@ import BudgetManager from './components/BudgetManager';
 import FinancialGoals from './components/FinancialGoals';
 import BillManager from './components/BillManager';
 import DataUpload from './components/DataUpload';
+import CloudSync from './components/CloudSync';
 import Login from './components/Login';
 import { ExpenseEntry, ExpenseCategory, FinancialGoal, Bill, Investment, IncomeCategory } from './types';
 import { expenseCategories, allIncome, allInvestments, incomeCategories } from './data/sampleData';
@@ -184,8 +185,8 @@ function App() {
     setExpenses(newExpenses);
     if (userStorage) {
       try {
-        userStorage.setExpenses(newExpenses);
-        console.log('Saved to user localStorage successfully');
+        userStorage.setExpensesWithSync(newExpenses);
+        console.log('Saved to user localStorage and synced to cloud successfully');
       } catch (error) {
         console.error('Error saving to user localStorage:', error);
       }
@@ -198,7 +199,7 @@ function App() {
   useEffect(() => {
     if (userStorage) {
       try {
-        userStorage.setGoals(goals);
+        userStorage.setGoalsWithSync(goals);
       } catch (error) {
         console.error('Error saving goals to user localStorage:', error);
       }
@@ -209,7 +210,7 @@ function App() {
   useEffect(() => {
     if (userStorage) {
       try {
-        userStorage.setBills(bills);
+        userStorage.setBillsWithSync(bills);
       } catch (error) {
         console.error('Error saving bills to user localStorage:', error);
       }
@@ -220,7 +221,7 @@ function App() {
   useEffect(() => {
     if (userStorage) {
       try {
-        userStorage.setIncome(income);
+        userStorage.setIncomeWithSync(income);
       } catch (error) {
         console.error('Error saving income to user localStorage:', error);
       }
@@ -231,7 +232,7 @@ function App() {
   useEffect(() => {
     if (userStorage) {
       try {
-        userStorage.setInvestments(investments);
+        userStorage.setInvestmentsWithSync(investments);
       } catch (error) {
         console.error('Error saving investments to user localStorage:', error);
       }
@@ -386,6 +387,8 @@ function App() {
             existingExpenses={expenses} 
           />
         );
+      case 7:
+        return <CloudSync />;
       default:
         return (
           <Dashboard 
