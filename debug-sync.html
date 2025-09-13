@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Cloud Sync</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Personal Finance App - Cloud Sync Debug</h1>
+    
+    <div class="section info">
+        <h3>Environment Check</h3>
+        <div id="envCheck">Checking...</div>
+    </div>
+    
+    <div class="section info">
+        <h3>Google APIs Status</h3>
+        <div id="apiStatus">Checking...</div>
+    </div>
+    
+    <div class="section info">
+        <h3>Authentication Status</h3>
+        <div id="authStatus">Checking...</div>
+    </div>
+    
+    <div class="section info">
+        <h3>Drive API Test</h3>
+        <button onclick="testDriveAPI()">Test Drive API</button>
+        <div id="driveTest">Click button to test</div>
+    </div>
+    
+    <div class="section info">
+        <h3>Sync Test</h3>
+        <button onclick="testSync()">Test Full Sync</button>
+        <div id="syncTest">Click button to test</div>
+    </div>
+    
+    <div class="section info">
+        <h3>Console Logs</h3>
+        <div id="consoleLogs"></div>
+    </div>
+
+    <script>
+        // Capture console logs
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+        
+        function addLog(type, message) {
+            const logsDiv = document.getElementById('consoleLogs');
+            const logEntry = document.createElement('div');
+            logEntry.style.margin = '5px 0';
+            logEntry.style.padding = '5px';
+            logEntry.style.borderRadius = '3px';
+            logEntry.style.fontSize = '12px';
+            
+            if (type === 'error') {
+                logEntry.style.backgroundColor = '#f8d7da';
+                logEntry.style.border = '1px solid #f5c6cb';
+            } else if (type === 'warn') {
+                logEntry.style.backgroundColor = '#fff3cd';
+                logEntry.style.border = '1px solid #ffeaa7';
+            } else {
+                logEntry.style.backgroundColor = '#d4edda';
+                logEntry.style.border = '1px solid #c3e6cb';
+            }
+            
+            logEntry.textContent = `[${type.toUpperCase()}] ${message}`;
+            logsDiv.appendChild(logEntry);
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+        }
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addLog('log', args.join(' '));
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addLog('error', args.join(' '));
+        };
+        
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            addLog('warn', args.join(' '));
+        };
+
+        // Environment check
+        function checkEnvironment() {
+            const envDiv = document.getElementById('envCheck');
+            const clientId = 'REACT_APP_GOOGLE_CLIENT_ID' in window ? window.REACT_APP_GOOGLE_CLIENT_ID : 'Not found';
+            const apiKey = 'REACT_APP_GOOGLE_API_KEY' in window ? window.REACT_APP_GOOGLE_API_KEY : 'Not found';
+            
+            envDiv.innerHTML = `
+                <p><strong>Client ID:</strong> ${clientId ? 'Set' : 'Not set'}</p>
+                <p><strong>API Key:</strong> ${apiKey ? 'Set' : 'Not set'}</p>
+                <p><strong>Environment:</strong> ${window.location.hostname === 'localhost' ? 'Development' : 'Production'}</p>
+            `;
+        }
+
+        // Check Google APIs
+        function checkGoogleAPIs() {
+            const apiDiv = document.getElementById('apiStatus');
+            const hasGapi = typeof window.gapi !== 'undefined';
+            const hasDrive = hasGapi && window.gapi.client && window.gapi.client.drive;
+            
+            apiDiv.innerHTML = `
+                <p><strong>Google API Loaded:</strong> ${hasGapi ? 'Yes' : 'No'}</p>
+                <p><strong>Drive API Available:</strong> ${hasDrive ? 'Yes' : 'No'}</p>
+                <p><strong>Access Token:</strong> ${localStorage.getItem('google_access_token') ? 'Present' : 'Not found'}</p>
+            `;
+        }
+
+        // Check authentication
+        function checkAuth() {
+            const authDiv = document.getElementById('authStatus');
+            const currentUser = localStorage.getItem('currentUser');
+            const user = currentUser ? JSON.parse(currentUser) : null;
+            
+            authDiv.innerHTML = `
+                <p><strong>Logged In:</strong> ${user ? 'Yes' : 'No'}</p>
+                ${user ? `<p><strong>User:</strong> ${user.name} (${user.email})</p>` : ''}
+                <p><strong>User ID:</strong> ${user ? user.id : 'N/A'}</p>
+            `;
+        }
+
+        // Test Drive API
+        async function testDriveAPI() {
+            const testDiv = document.getElementById('driveTest');
+            testDiv.innerHTML = 'Testing...';
+            
+            try {
+                if (!window.gapi || !window.gapi.client || !window.gapi.client.drive) {
+                    throw new Error('Google Drive API not available');
+                }
+                
+                // Test basic Drive API access
+                const response = await window.gapi.client.drive.files.list({
+                    pageSize: 10,
+                    fields: 'files(id, name, mimeType)',
+                });
+                
+                testDiv.innerHTML = `
+                    <div class="success">
+                        <p><strong>✅ Drive API Test Passed</strong></p>
+                        <p>Found ${response.result.files.length} files</p>
+                        <pre>${JSON.stringify(response.result.files, null, 2)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                testDiv.innerHTML = `
+                    <div class="error">
+                        <p><strong>❌ Drive API Test Failed</strong></p>
+                        <p>Error: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Test sync
+        async function testSync() {
+            const testDiv = document.getElementById('syncTest');
+            testDiv.innerHTML = 'Testing sync...';
+            
+            try {
+                // Check if we have a user
+                const currentUser = localStorage.getItem('currentUser');
+                if (!currentUser) {
+                    throw new Error('No user logged in');
+                }
+                
+                const user = JSON.parse(currentUser);
+                
+                // Import the UserDataStorage class (this would need to be available)
+                // For now, let's test the basic Drive API functionality
+                if (!window.gapi || !window.gapi.client || !window.gapi.client.drive) {
+                    throw new Error('Google Drive API not available');
+                }
+                
+                // Test folder creation
+                const folderResponse = await window.gapi.client.drive.files.create({
+                    resource: {
+                        name: 'PersonalFinanceApp-Test',
+                        mimeType: 'application/vnd.google-apps.folder',
+                    },
+                    fields: 'id, name',
+                });
+                
+                testDiv.innerHTML = `
+                    <div class="success">
+                        <p><strong>✅ Sync Test Passed</strong></p>
+                        <p>Created test folder: ${folderResponse.result.name}</p>
+                        <p>Folder ID: ${folderResponse.result.id}</p>
+                    </div>
+                `;
+            } catch (error) {
+                testDiv.innerHTML = `
+                    <div class="error">
+                        <p><strong>❌ Sync Test Failed</strong></p>
+                        <p>Error: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Initialize
+        window.addEventListener('load', () => {
+            checkEnvironment();
+            checkGoogleAPIs();
+            checkAuth();
+            
+            // Check every 2 seconds
+            setInterval(() => {
+                checkGoogleAPIs();
+                checkAuth();
+            }, 2000);
+        });
+    </script>
+</body>
+</html>

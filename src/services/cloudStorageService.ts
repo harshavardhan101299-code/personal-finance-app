@@ -25,15 +25,22 @@ export class CloudStorageService {
         throw new Error('Google Drive API not available');
       }
 
+      console.log('Searching for existing PersonalFinanceApp folder...');
+
       // First, try to find existing folder
       const searchResponse = await window.gapi.client.drive.files.list({
         q: `name='${this.DRIVE_FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
         fields: 'files(id, name)',
       });
 
+      console.log('Search response:', searchResponse.result);
+
       if (searchResponse.result.files && searchResponse.result.files.length > 0) {
+        console.log(`Found existing folder: ${searchResponse.result.files[0].name} (ID: ${searchResponse.result.files[0].id})`);
         return searchResponse.result.files[0].id!;
       }
+
+      console.log('No existing folder found, creating new one...');
 
       // Create new folder if not found
       const folderResponse = await window.gapi.client.drive.files.create({
@@ -41,13 +48,15 @@ export class CloudStorageService {
           name: this.DRIVE_FOLDER_NAME,
           mimeType: 'application/vnd.google-apps.folder',
         },
-        fields: 'id',
+        fields: 'id, name',
       });
 
+      console.log(`Created new folder: ${folderResponse.result.name} (ID: ${folderResponse.result.id})`);
       return folderResponse.result.id!;
     } catch (error) {
       console.error('Error getting/creating app folder:', error);
-      throw new Error('Failed to access Google Drive folder');
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to access Google Drive folder: ${errorMessage}`);
     }
   }
 
@@ -60,17 +69,35 @@ export class CloudStorageService {
         throw new Error('Google Drive API not available');
       }
 
+      console.log(`Searching for existing data file in folder ${folderId}...`);
+
       // Search for existing data file
       const searchResponse = await window.gapi.client.drive.files.list({
         q: `name='${this.DATA_FILE_NAME}' and parents in '${folderId}' and trashed=false`,
         fields: 'files(id, name)',
       });
 
+      console.log('Data file search response:', searchResponse.result);
+
       if (searchResponse.result.files && searchResponse.result.files.length > 0) {
+        console.log(`Found existing data file: ${searchResponse.result.files[0].name} (ID: ${searchResponse.result.files[0].id})`);
         return searchResponse.result.files[0].id!;
       }
 
+      console.log('No existing data file found, creating new one...');
+
       // Create new data file if not found
+      const initialData = {
+        expenses: [],
+        income: [],
+        categories: [],
+        goals: [],
+        bills: [],
+        investments: [],
+        lastSync: new Date().toISOString(),
+        version: 1,
+      };
+
       const fileResponse = await window.gapi.client.drive.files.create({
         resource: {
           name: this.DATA_FILE_NAME,
@@ -78,24 +105,17 @@ export class CloudStorageService {
         },
         media: {
           mimeType: this.MIME_TYPE,
-          body: JSON.stringify({
-            expenses: [],
-            income: [],
-            categories: [],
-            goals: [],
-            bills: [],
-            investments: [],
-            lastSync: new Date().toISOString(),
-            version: 1,
-          }),
+          body: JSON.stringify(initialData, null, 2),
         },
-        fields: 'id',
+        fields: 'id, name',
       });
 
+      console.log(`Created new data file: ${fileResponse.result.name} (ID: ${fileResponse.result.id})`);
       return fileResponse.result.id!;
     } catch (error) {
       console.error('Error getting/creating data file:', error);
-      throw new Error('Failed to access data file');
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to access data file: ${errorMessage}`);
     }
   }
 
@@ -108,19 +128,34 @@ export class CloudStorageService {
         throw new Error('Google Drive API not initialized');
       }
 
+      console.log('Starting data upload to Google Drive...');
+      console.log('Data to upload:', {
+        expenses: data.expenses.length,
+        income: data.income.length,
+        categories: data.categories.length,
+        goals: data.goals.length,
+        bills: data.bills.length,
+        investments: data.investments.length,
+        lastSync: data.lastSync,
+        version: data.version
+      });
+
       const folderId = await this.getOrCreateAppFolder();
       const fileId = await this.getOrCreateDataFile(folderId);
 
+      console.log(`Updating data file ${fileId} with new data...`);
+
       // Update the data file
-      await window.gapi.client.drive.files.update({
+      const updateResponse = await window.gapi.client.drive.files.update({
         fileId: fileId,
         media: {
           mimeType: this.MIME_TYPE,
-          body: JSON.stringify(data),
+          body: JSON.stringify(data, null, 2),
         },
       });
 
       console.log('Data uploaded to Google Drive successfully');
+      console.log('Update response:', updateResponse.result);
     } catch (error) {
       console.error('Error uploading data to cloud:', error);
       throw error;

@@ -244,7 +244,8 @@ const DataUpload: React.FC<DataUploadProps> = ({ onDataUpload, existingExpenses 
 
     } catch (error) {
       success = false;
-      message = `Error processing CSV: ${error}`;
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      message = `Error processing CSV: ${errorMessage}`;
     }
 
     return {
@@ -307,10 +308,11 @@ const DataUpload: React.FC<DataUploadProps> = ({ onDataUpload, existingExpenses 
       }
     } catch (error) {
       console.error('Upload error:', error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
       setUploadResult({
         expenses: [],
         categories: [],
-        message: `Error reading file: ${error}`,
+        message: `Error reading file: ${errorMessage}`,
         success: false
       });
     } finally {
